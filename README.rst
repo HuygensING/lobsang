@@ -7,5 +7,5 @@ system.
 
 What's in a name
 ~~~~~~~~~~~~~~~~
-https://wiki.lspace.org/mediawiki/Lobsang_Ludd
-https://wiki.lspace.org/mediawiki/Time
+* https://wiki.lspace.org/mediawiki/Lobsang_Ludd
+* https://wiki.lspace.org/mediawiki/Time
