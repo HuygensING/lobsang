@@ -1,4 +1,4 @@
-package config;
+package nl.knaw.huygens.lobsang.config;
 
 import io.dropwizard.Configuration;
 

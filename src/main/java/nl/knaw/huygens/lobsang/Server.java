@@ -1,11 +1,13 @@
-import config.LobsangConfig;
+package nl.knaw.huygens.lobsang;
+
+import nl.knaw.huygens.lobsang.config.LobsangConfig;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
-public class LobsangApplication extends Application<LobsangConfig> {
+public class Server extends Application<LobsangConfig> {
   public static void main(String[] args) throws Exception {
-    new LobsangApplication().run(args);
+    new Server().run(args);
   }
 
   @Override
