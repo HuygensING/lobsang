@@ -1,13 +1,16 @@
 logging:
   level: INFO
   appenders:
-    - type: console-json
-      fieldNames:
-        mdc: "mdc"
+    - type: console
+      layout:
+        type: json
 
   loggers:
     nl.knaw.huygens.lobsang: DEBUG
 
 server:
   requestLog:
-    appenders: [] # All requests are logged through logging.RequestLoggingFilter
+    appenders:
+    - type: console
+      layout:
+        type: access-json
