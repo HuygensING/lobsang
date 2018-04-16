@@ -10,14 +10,6 @@ apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'checkstyle'
 
-group = 'nl.knaw.huygens.lobsang'
-version = '0.1.0'
-
-mainClassName = 'nl.knaw.huygens.lobsang.Server'
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 repositories {
     jcenter()
 }
@@ -31,6 +23,13 @@ def getVersionName = { ->
     return stdout.toString().trim()
 }
 
+def getBuiltBy = { ->
+    def user = System.getProperty("user.name")
+    def host = InetAddress.localHost.hostName
+    def os = System.getProperty("os.name") + ' ' + System.getProperty("os.version")
+    return user + '@' + host + ' on ' + os
+}
+
 ext {
     dropwizardVersion = '1.3.0'
     junitVersion = '4.+'
@@ -42,9 +41,12 @@ checkstyle {
 }
 
 version = "${gitTag}"
+group = 'nl.knaw.huygens.lobsang'
+mainClassName = 'nl.knaw.huygens.lobsang.Server'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 dependencies {
-
     compile group: 'io.dropwizard', name: 'dropwizard-core', version: dropwizardVersion
     compile group: 'io.dropwizard', name: 'dropwizard-json-logging', version: dropwizardVersion
 
@@ -63,7 +65,7 @@ shadowJar {
         attributes 'Implementation-Version': rootProject.version
         attributes 'Implementation-Vendor-Id': rootProject.group
         attributes 'Build-Time': ZonedDateTime.now(ZoneId.of("UTC")).format(DateTimeFormatter.ISO_ZONED_DATE_TIME)
-        attributes 'Built-By': InetAddress.localHost.hostName
+        attributes 'Built-By': getBuiltBy()
         attributes 'Created-By': 'Gradle ' + gradle.gradleVersion
         attributes 'Main-Class': mainClassName
     }

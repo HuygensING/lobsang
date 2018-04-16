@@ -31,8 +31,9 @@ public class Server extends Application<LobsangConfig> {
       Manifest manifest = new Manifest(manifestUrl.openStream());
       Attributes mainAttributes = manifest.getMainAttributes();
       String implementationTitle = mainAttributes.getValue("Implementation-Title");
-      LOG.debug("implementationTitle: {}", implementationTitle);
       if (implementationTitle != null && implementationTitle.equals(applicationName)) {
+        LOG.debug("lobsang mainAttributes: {}", mainAttributes);
+        mainAttributes.forEach((k,v) -> LOG.debug(" - {}: {}", k, v));
         String implementationVersion = mainAttributes.getValue("Implementation-Version");
         String buildTime = mainAttributes.getValue("Build-Time");
         return implementationVersion + " (" + buildTime + ")";
