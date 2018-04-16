@@ -2,8 +2,8 @@ logging:
   level: INFO
   appenders:
     - type: console
-      layout:
-        type: json
+#      layout:
+#        type: json
 
   loggers:
     nl.knaw.huygens.lobsang: DEBUG
