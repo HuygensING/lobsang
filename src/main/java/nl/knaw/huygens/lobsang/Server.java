@@ -19,26 +19,25 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
 
+import static java.util.jar.Attributes.Name.IMPLEMENTATION_TITLE;
+
 public class Server extends Application<LobsangConfig> {
   private static final Logger LOG = LoggerFactory.getLogger(Server.class);
 
-  private static String findVersionInfo(String applicationName) throws IOException {
+  private static Manifest findManifest(String name) throws IOException {
     Enumeration<URL> resources = Thread.currentThread().getContextClassLoader()
                                        .getResources("META-INF/MANIFEST.MF");
     while (resources.hasMoreElements()) {
-      URL manifestUrl = resources.nextElement();
-      Manifest manifest = new Manifest(manifestUrl.openStream());
-      Attributes mainAttributes = manifest.getMainAttributes();
-      String implementationTitle = mainAttributes.getValue("Implementation-Title");
-      if (implementationTitle != null && implementationTitle.equals(applicationName)) {
-        LOG.debug("lobsang mainAttributes: {}", mainAttributes);
-        mainAttributes.forEach((key,value) -> LOG.debug(" - {}: {}", key, value));
-        String implementationVersion = mainAttributes.getValue("Implementation-Version");
-        String buildTime = mainAttributes.getValue("Build-Time");
-        return implementationVersion + " (" + buildTime + ")";
+      final URL manifestUrl = resources.nextElement();
+      final Manifest manifest = new Manifest(manifestUrl.openStream());
+      final Attributes mainAttributes = manifest.getMainAttributes();
+      final String implementationTitle = mainAttributes.getValue(IMPLEMENTATION_TITLE);
+      if (name.equals(implementationTitle)) {
+        return manifest;
       }
     }
-    return "Current Version";
+
+    return null;
   }
 
   public static void main(String[] args) throws Exception {

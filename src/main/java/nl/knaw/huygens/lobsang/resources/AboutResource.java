@@ -8,15 +8,23 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import java.util.concurrent.TimeUnit;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
-@Path("/about")
+@Path("about")
 @Produces(MediaType.APPLICATION_JSON)
 public class AboutResource {
 
+  private final Manifest manifest;
+
+  public AboutResource(Manifest manifest) {
+    this.manifest = manifest;
+  }
+
   @GET
   @CacheControl(maxAge = 6, maxAgeUnit = TimeUnit.HOURS)
-  public String hello() {
-    return "Hello world2";
+  public Attributes hello() {
+    return manifest.getMainAttributes();
   }
 
 }
