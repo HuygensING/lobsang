@@ -6,6 +6,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.huygens.lobsang.config.LobsangConfig;
 import nl.knaw.huygens.lobsang.resources.AboutResource;
+import nl.knaw.huygens.lobsang.resources.DateConversionResource;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,11 +58,11 @@ public class Server extends Application<LobsangConfig> {
   public void run(LobsangConfig lobsangConfig, Environment environment) throws IOException {
     setupLogging(environment);
     registerResources(environment.jersey());
-    LOG.debug("version: {}", findVersionInfo(getName()));
   }
 
-  private void registerResources(JerseyEnvironment jersey) {
-    jersey.register(new AboutResource());
+  private void registerResources(JerseyEnvironment jersey) throws IOException {
+    jersey.register(new AboutResource(findManifest(getName())));
+    jersey.register(new DateConversionResource());
   }
 
   private void setupLogging(Environment environment) {
