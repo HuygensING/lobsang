@@ -46,6 +46,11 @@ mainClassName = 'nl.knaw.huygens.lobsang.Server'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+compileJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
+
 dependencies {
     compile group: 'io.dropwizard', name: 'dropwizard-core', version: dropwizardVersion
     compile group: 'io.dropwizard', name: 'dropwizard-json-logging', version: dropwizardVersion

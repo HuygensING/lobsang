@@ -18,8 +18,6 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
 
-import static org.glassfish.jersey.logging.LoggingFeature.Verbosity.PAYLOAD_ANY;
-
 public class Server extends Application<LobsangConfig> {
   private static final Logger LOG = LoggerFactory.getLogger(Server.class);
 
@@ -33,7 +31,7 @@ public class Server extends Application<LobsangConfig> {
       String implementationTitle = mainAttributes.getValue("Implementation-Title");
       if (implementationTitle != null && implementationTitle.equals(applicationName)) {
         LOG.debug("lobsang mainAttributes: {}", mainAttributes);
-        mainAttributes.forEach((k,v) -> LOG.debug(" - {}: {}", k, v));
+        mainAttributes.forEach((key,value) -> LOG.debug(" - {}: {}", key, value));
         String implementationVersion = mainAttributes.getValue("Implementation-Version");
         String buildTime = mainAttributes.getValue("Build-Time");
         return implementationVersion + " (" + buildTime + ")";
@@ -71,6 +69,6 @@ public class Server extends Application<LobsangConfig> {
     MDC.put("commit_hash", commitHash);
 
     environment.jersey().register(new LoggingFeature(java.util.logging.Logger.getLogger(getClass().getName()),
-      Level.FINE, PAYLOAD_ANY, 1024));
+      Level.FINE, LoggingFeature.Verbosity.PAYLOAD_ANY, 1024));
   }
 }

@@ -16,7 +16,7 @@ public class AboutResource {
   @GET
   @CacheControl(maxAge = 6, maxAgeUnit = TimeUnit.HOURS)
   public String hello() {
-    return "Hello world";
+    return "Hello world2";
   }
 
 }
