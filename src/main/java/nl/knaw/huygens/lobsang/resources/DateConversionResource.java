@@ -1,7 +1,10 @@
 package nl.knaw.huygens.lobsang.resources;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -12,7 +15,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Path("julianDay")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
-/**
+/*
  * See also:
  * https://stackoverflow.com/questions/47001216/how-to-convert-a-gregorian-date-to-julian-date-with-the-java-8-date
  * -time-api
@@ -27,7 +30,7 @@ public class DateConversionResource {
   @Path("fromGregorian")
   // The Julian day number can be calculated using the following formulas (integer division is used exclusively,
   // that is, the remainder of all divisions are dropped)!
-  public JulianDay fromGregorian(Date date) {
+  public JulianDay fromGregorian(@NotNull Date date) {
     final int Y = date.year;
     final int M = date.month;
     final int D = date.day;
@@ -41,7 +44,7 @@ public class DateConversionResource {
 
   @POST
   @Path("fromJulian")
-  public JulianDay fromJulian(Date date) {
+  public JulianDay fromJulian(@NotNull Date date) {
     final int Y = date.year;
     final int M = date.month;
     final int D = date.day;
@@ -55,7 +58,7 @@ public class DateConversionResource {
 
   @POST
   @Path("toJulian")
-  public Date toJulian(JulianDay julianDay) {
+  public Date toJulian(@NotNull @Valid JulianDay julianDay) {
     final int J = julianDay.value;
 
     // 1. For Julian calendar: f = J + j
@@ -66,7 +69,7 @@ public class DateConversionResource {
 
   @POST
   @Path("toGregorian")
-  public Date toGregorian(JulianDay julianDay) {
+  public Date toGregorian(@NotNull JulianDay julianDay) {
     final int J = julianDay.value;
 
     // 1. For Gregorian calendar: f = J + j + (((4 × J + B) div 146097) × 3) div 4 + C
@@ -102,17 +105,16 @@ public class DateConversionResource {
 
   static class Date {
     @JsonProperty
-    int year;
+    private final int year;
 
     @JsonProperty
-    int month;
+    private final int month;
 
     @JsonProperty
-    int day;
+    private final int day;
 
-    Date(){}
-
-    Date(int year, int month, int day) {
+    @JsonCreator
+    Date(@JsonProperty("year") int year, @JsonProperty("month") int month, @JsonProperty("day") int day) {
       this.year = year;
       this.month = month;
       this.day = day;
@@ -121,11 +123,10 @@ public class DateConversionResource {
 
   static class JulianDay {
     @JsonProperty
-    int value;
+    private final int value;
 
-    JulianDay(){}
-
-    JulianDay(int value) {
+    @JsonCreator
+    JulianDay(@JsonProperty("value") int value) {
       this.value = value;
     }
   }
