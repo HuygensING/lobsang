@@ -33,10 +33,10 @@ public class DateConversionResource {
     final int D = date.day;
 
     return new JulianDay(
-      (1461 * (Y + 4800 + (M - 14) / 12)) / 4
-        + (367 * (M - 2 - 12 * ((M - 14) / 12))) / 12
-        - (3 * ((Y + 4900 + (M - 14) / 12) / 100)) / 4
-        + D - 32075);
+      (1461 * (Y + 4800 + (M - 14) / 12)) / 4 +
+        (367 * (M - 2 - 12 * ((M - 14) / 12))) / 12 -
+        (3 * ((Y + 4900 + (M - 14) / 12) / 100)) / 4 +
+        D - 32075);
   }
 
   @POST
@@ -47,10 +47,10 @@ public class DateConversionResource {
     final int D = date.day;
 
     return new JulianDay(
-      367 * Y
-        - (7 * (Y + 5001 + (M - 9) / 7)) / 4
-        + (275 * M) / 9
-        + D + 1729777);
+      367 * Y -
+        (7 * (Y + 5001 + (M - 9) / 7)) / 4 +
+        (275 * M) / 9 +
+        D + 1729777);
   }
 
   @POST
@@ -75,9 +75,9 @@ public class DateConversionResource {
     return findJulianGregorianDate(f);
   }
 
-  private Date findJulianGregorianDate(int f) {
+  private Date findJulianGregorianDate(int julGregF) {
     // 2. e = r × f + v
-    final int e = 4 * f + 3;
+    final int e = 4 * julGregF + 3;
 
     // 3. g = mod(e, p) div r
     final int g = (e % 1461) / 4;
@@ -111,6 +111,7 @@ public class DateConversionResource {
     int day;
 
     Date(){}
+
     Date(int year, int month, int day) {
       this.year = year;
       this.month = month;
@@ -123,6 +124,7 @@ public class DateConversionResource {
     int value;
 
     JulianDay(){}
+
     JulianDay(int value) {
       this.value = value;
     }
