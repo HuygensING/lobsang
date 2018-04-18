@@ -23,7 +23,7 @@ public class AboutResource {
 
   @GET
   @CacheControl(maxAge = 6, maxAgeUnit = TimeUnit.HOURS)
-  public Attributes hello() {
+  public Attributes about() {
     return manifest.getMainAttributes();
   }
 
