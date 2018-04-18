@@ -1,0 +1,14 @@
+logging:
+  level: INFO
+  appenders:
+    - type: console
+
+  loggers:
+    nl.knaw.huygens.lobsang: DEBUG
+
+server:
+  requestLog:
+    appenders:
+    - type: console
+      layout:
+        type: access-json
