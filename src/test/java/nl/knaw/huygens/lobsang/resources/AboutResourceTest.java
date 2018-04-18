@@ -23,7 +23,7 @@ public class AboutResourceTest {
   }
 
   @Test
-  public void about() {
+  public void aboutReturnsManifestAttributes() {
     assertThat(resource.about()).isEqualTo(attributes);
   }
 }
