@@ -7,6 +7,14 @@ logging:
     nl.knaw.huygens.lobsang: DEBUG
 
 server:
+# move away from default ports 8080 / 8081, lest our tests fail when a proper server is already bound to those ports
+  applicationConnectors:
+    - type: http
+      port: 20180
+  adminConnectors:
+    - type: http
+      port: 20181
+
   requestLog:
     appenders:
     - type: console
