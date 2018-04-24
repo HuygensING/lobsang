@@ -1,22 +1,22 @@
 package nl.knaw.huygens.lobsang.resources;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.AbstractMap.SimpleEntry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AboutResourceTest {
+class AboutResourceTest {
   private AboutResource resource;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     resource = new AboutResource();
   }
 
   @Test
-  public void aboutReturnsManifestAttributes() {
+  void aboutReturnsManifestAttributes() {
     assertThat(resource.about()).containsExactly(new SimpleEntry<>("Manifest", "not found"));
   }
 }
