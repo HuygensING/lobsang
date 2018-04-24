@@ -7,13 +7,14 @@ logging:
     nl.knaw.huygens.lobsang: DEBUG
 
 server:
-# move away from default ports 8080 / 8081, lest our tests fail when a proper server is already bound to those ports
+# Move away from default ports 8080 / 8081, lest our tests fail when a proper server is already bound to those ports
+# Binding to port 0 results in the application binding to a random, unused port. This allows tests to be run in parallel
   applicationConnectors:
     - type: http
-      port: 20180
+      port: 0
   adminConnectors:
     - type: http
-      port: 20181
+      port: 0
 
   requestLog:
     appenders:
