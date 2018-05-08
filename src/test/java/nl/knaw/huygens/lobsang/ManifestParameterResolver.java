@@ -14,12 +14,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ManifestParameterResolver implements ParameterResolver {
   @Override
-  public boolean supportsParameter(ParameterContext pc, ExtensionContext ec) throws ParameterResolutionException {
-    return pc.getParameter().getType() == Manifest.class;
+  public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
+    throws ParameterResolutionException {
+    return parameterContext.getParameter().getType() == Manifest.class;
   }
 
   @Override
-  public Object resolveParameter(ParameterContext pc, ExtensionContext ec) throws ParameterResolutionException {
+  public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
+    throws ParameterResolutionException {
     final Manifest manifest = new Manifest();
 
     try {
