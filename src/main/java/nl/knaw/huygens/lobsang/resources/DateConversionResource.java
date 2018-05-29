@@ -1,7 +1,9 @@
 package nl.knaw.huygens.lobsang.resources;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import nl.knaw.huygens.lobsang.api.DateRequest;
+import nl.knaw.huygens.lobsang.api.JulianDay;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -25,15 +27,18 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
  * https://en.wikipedia.org/wiki/Julian_day
  */
 public class DateConversionResource {
+  private static final Logger LOG = LoggerFactory.getLogger(DateConversionResource.class);
 
   @POST
   @Path("fromGregorian")
   // The Julian day number can be calculated using the following formulas (integer division is used exclusively,
   // that is, the remainder of all divisions are dropped)!
-  public JulianDay fromGregorian(@NotNull Date date) {
-    final int Y = date.year;
-    final int M = date.month;
-    final int D = date.day;
+  public JulianDay fromGregorian(@NotNull DateRequest date) {
+    LOG.info("date: {}", date);
+
+    final int Y = date.getYear();
+    final int M = date.getMonth();
+    final int D = date.getDay();
 
     return new JulianDay(
       (1461 * (Y + 4800 + (M - 14) / 12)) / 4 +
@@ -44,10 +49,10 @@ public class DateConversionResource {
 
   @POST
   @Path("fromJulian")
-  public JulianDay fromJulian(@NotNull Date date) {
-    final int Y = date.year;
-    final int M = date.month;
-    final int D = date.day;
+  public JulianDay fromJulian(@NotNull DateRequest date) {
+    final int Y = date.getYear();
+    final int M = date.getMonth();
+    final int D = date.getDay();
 
     return new JulianDay(
       367 * Y -
@@ -58,8 +63,8 @@ public class DateConversionResource {
 
   @POST
   @Path("toJulian")
-  public Date toJulian(@NotNull @Valid JulianDay julianDay) {
-    final int J = julianDay.value;
+  public DateRequest toJulian(@NotNull @Valid JulianDay julianDay) {
+    final int J = julianDay.getValue();
 
     // 1. For Julian calendar: f = J + j
     final int f = J + 1401;
@@ -69,8 +74,8 @@ public class DateConversionResource {
 
   @POST
   @Path("toGregorian")
-  public Date toGregorian(@NotNull JulianDay julianDay) {
-    final int J = julianDay.value;
+  public DateRequest toGregorian(@NotNull JulianDay julianDay) {
+    final int J = julianDay.getValue();
 
     // 1. For Gregorian calendar: f = J + j + (((4 × J + B) div 146097) × 3) div 4 + C
     final int f = J + 1401 + (((4 * J + 274277) / 146097) * 3) / 4 + -38;
@@ -78,7 +83,7 @@ public class DateConversionResource {
     return findJulianGregorianDate(f);
   }
 
-  private Date findJulianGregorianDate(int julGregF) {
+  private DateRequest findJulianGregorianDate(int julGregF) {
     // 2. e = r × f + v
     final int e = 4 * julGregF + 3;
 
@@ -100,34 +105,7 @@ public class DateConversionResource {
     // D, M, and Y are the numbers of the day, month, and year respectively for the afternoon at the beginning of the
     // given Julian day.
 
-    return new Date(Y, M, D);
+    return new DateRequest(Y, M, D);
   }
 
-  static class Date {
-    @JsonProperty
-    private final int year;
-
-    @JsonProperty
-    private final int month;
-
-    @JsonProperty
-    private final int day;
-
-    @JsonCreator
-    Date(@JsonProperty("year") int year, @JsonProperty("month") int month, @JsonProperty("day") int day) {
-      this.year = year;
-      this.month = month;
-      this.day = day;
-    }
-  }
-
-  static class JulianDay {
-    @JsonProperty
-    private final int value;
-
-    @JsonCreator
-    JulianDay(@JsonProperty("value") int value) {
-      this.value = value;
-    }
-  }
 }
