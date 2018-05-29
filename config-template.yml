@@ -7,6 +7,7 @@ logging:
 
   loggers:
     nl.knaw.huygens.lobsang: DEBUG
+    nl.knaw.huygens.lobsang.resources: TRACE
 
 server:
   requestLog:
