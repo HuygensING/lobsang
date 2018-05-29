@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import io.dropwizard.testing.ResourceHelpers;
 import io.dropwizard.testing.junit5.DropwizardAppExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import nl.knaw.huygens.lobsang.config.LobsangConfig;
 import org.assertj.core.api.Assertions;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.jupiter.api.Test;
@@ -18,10 +17,10 @@ import java.io.IOException;
 import static io.dropwizard.testing.FixtureHelpers.fixture;
 
 @ExtendWith(DropwizardExtensionsSupport.class)
-class LobsangIntegrationTest {
+class LobsangApplicationIntegrationTest {
 
-  private static final DropwizardAppExtension<LobsangConfig> DROPWIZARD = new DropwizardAppExtension<>(
-    Server.class, ResourceHelpers.resourceFilePath("config-test.yml")
+  private static final DropwizardAppExtension<LobsangConfiguration> DROPWIZARD = new DropwizardAppExtension<>(
+    LobsangApplication.class, ResourceHelpers.resourceFilePath("config-test.yml")
   );
 
   @Test

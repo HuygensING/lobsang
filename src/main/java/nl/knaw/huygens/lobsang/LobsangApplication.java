@@ -4,7 +4,6 @@ import io.dropwizard.Application;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import nl.knaw.huygens.lobsang.config.LobsangConfig;
 import nl.knaw.huygens.lobsang.resources.AboutResource;
 import nl.knaw.huygens.lobsang.resources.DateConversionResource;
 import org.glassfish.jersey.logging.LoggingFeature;
@@ -21,8 +20,8 @@ import java.util.logging.Level;
 
 import static java.util.jar.Attributes.Name.IMPLEMENTATION_TITLE;
 
-public class Server extends Application<LobsangConfig> {
-  private static final Logger LOG = LoggerFactory.getLogger(Server.class);
+public class LobsangApplication extends Application<LobsangConfiguration> {
+  private static final Logger LOG = LoggerFactory.getLogger(LobsangApplication.class);
 
   private static Manifest findManifest(String name) throws IOException {
     Enumeration<URL> resources = Thread.currentThread().getContextClassLoader()
@@ -41,7 +40,7 @@ public class Server extends Application<LobsangConfig> {
   }
 
   public static void main(String[] args) throws Exception {
-    new Server().run(args);
+    new LobsangApplication().run(args);
   }
 
   @Override
@@ -50,13 +49,14 @@ public class Server extends Application<LobsangConfig> {
   }
 
   @Override
-  public void initialize(Bootstrap<LobsangConfig> bootstrap) {
+  public void initialize(Bootstrap<LobsangConfiguration> bootstrap) {
     LOG.info("initializing");
   }
 
-  public void run(LobsangConfig lobsangConfig, Environment environment) throws IOException {
+  public void run(LobsangConfiguration lobsangConfiguration, Environment environment) throws IOException {
     setupLogging(environment);
     registerResources(environment.jersey());
+    LOG.warn("registered calendars: {}", lobsangConfiguration.getLocationInfo());
   }
 
   private void registerResources(JerseyEnvironment jersey) throws IOException {

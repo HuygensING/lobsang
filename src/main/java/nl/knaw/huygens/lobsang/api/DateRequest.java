@@ -15,14 +15,21 @@ public class DateRequest {
 
   private int day;
 
+  private String location;
+
   public DateRequest() {
     // Jackson deserialization
   }
 
   public DateRequest(int year, int month, int day) {
+    this(year, month, day, null);
+  }
+
+  public DateRequest(int year, int month, int day, String location) {
     this.year = year;
     this.month = month;
     this.day = day;
+    this.location = location;
   }
 
   @JsonProperty
@@ -40,12 +47,18 @@ public class DateRequest {
     return day;
   }
 
+  @JsonProperty
+  public String getLocation() {
+    return location;
+  }
+
   @Override
   public String toString() {
     return toStringHelper(this)
       .add("year", year)
       .add("month", month)
       .add("day", day)
+      .add("location", location)
       .toString();
   }
 }
