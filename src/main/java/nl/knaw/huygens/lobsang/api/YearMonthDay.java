@@ -4,21 +4,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonPropertyOrder({"year", "month", "day"})
-public class DayMonthYear {
+public class YearMonthDay {
   private final int day;
   private final int month;
   private final int year;
 
-  public DayMonthYear(int day, int month, int year) {
+  public YearMonthDay(int year, int month, int day) {
 
-    this.day = day;
-    this.month = month;
     this.year = year;
+    this.month = month;
+    this.day = day;
   }
 
   @JsonProperty
-  public int getDay() {
-    return day;
+  public int getYear() {
+    return year;
   }
 
   @JsonProperty
@@ -27,7 +27,7 @@ public class DayMonthYear {
   }
 
   @JsonProperty
-  public int getYear() {
-    return year;
+  public int getDay() {
+    return day;
   }
 }

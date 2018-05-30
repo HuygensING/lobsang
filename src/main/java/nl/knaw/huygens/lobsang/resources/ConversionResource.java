@@ -2,7 +2,7 @@ package nl.knaw.huygens.lobsang.resources;
 
 import nl.knaw.huygens.lobsang.api.DateRequest;
 import nl.knaw.huygens.lobsang.api.DateResult;
-import nl.knaw.huygens.lobsang.api.DayMonthYear;
+import nl.knaw.huygens.lobsang.api.YearMonthDay;
 import nl.knaw.huygens.lobsang.core.ConverterRegistry;
 
 import javax.validation.constraints.NotNull;
@@ -26,7 +26,7 @@ public class ConversionResource {
   public DateResult convert(@NotNull DateRequest dateRequest) {
     // base converter usage on DateRequest.location, assume Julian for now
     final int julianDay = converters.get("julian").toJulianDay(dateRequest);
-    final DayMonthYear date = converters.get("gregorian").fromJulianDay(julianDay);
+    final YearMonthDay date = converters.get("gregorian").fromJulianDay(julianDay);
     return new DateResult(date);
   }
 }

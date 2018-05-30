@@ -1,7 +1,7 @@
 package nl.knaw.huygens.lobsang.core.converters;
 
 import nl.knaw.huygens.lobsang.api.DateRequest;
-import nl.knaw.huygens.lobsang.api.DayMonthYear;
+import nl.knaw.huygens.lobsang.api.YearMonthDay;
 
 // TODO: implement
 public class RomanConverter implements CalendarConverter {
@@ -16,7 +16,7 @@ public class RomanConverter implements CalendarConverter {
   }
 
   @Override
-  public DayMonthYear fromJulianDay(int julianDay) {
+  public YearMonthDay fromJulianDay(int julianDay) {
     throw new UnsupportedOperationException();
   }
 }

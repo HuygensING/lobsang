@@ -10,16 +10,16 @@ import java.util.List;
 public class DateResult {
   private final List<String> hints;
   private final List<String> notes;
-  private final DayMonthYear date;
+  private final YearMonthDay date;
 
-  public DateResult(DayMonthYear date) {
+  public DateResult(YearMonthDay date) {
     this.date = date;
     this.hints = new ArrayList<>();
     this.notes = new ArrayList<>();
   }
 
-  @JsonProperty("date")
-  public DayMonthYear getDate() {
+  @JsonProperty
+  public YearMonthDay getDate() {
     return date;
   }
 

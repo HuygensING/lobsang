@@ -1,6 +1,6 @@
 package nl.knaw.huygens.lobsang.core.converters;
 
-import nl.knaw.huygens.lobsang.api.DayMonthYear;
+import nl.knaw.huygens.lobsang.api.YearMonthDay;
 
 /*
  * See also:
@@ -13,7 +13,7 @@ import nl.knaw.huygens.lobsang.api.DayMonthYear;
  */
 abstract class JulianGregorianConverterBase implements CalendarConverter {
 
-  DayMonthYear findJulianGregorianDate(int julGregF) {
+  YearMonthDay findJulianGregorianDate(int julGregF) {
     // 2. e = r × f + v
     final int e = 4 * julGregF + 3;
 
@@ -35,6 +35,6 @@ abstract class JulianGregorianConverterBase implements CalendarConverter {
     // D, M, and Y are the numbers of the day, month, and year respectively for the afternoon at the beginning of the
     // given Julian day.
 
-    return new DayMonthYear(D, M, Y);
+    return new YearMonthDay(Y, M, D);
   }
 }

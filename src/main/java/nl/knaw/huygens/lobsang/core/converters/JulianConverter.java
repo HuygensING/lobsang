@@ -1,7 +1,7 @@
 package nl.knaw.huygens.lobsang.core.converters;
 
 import nl.knaw.huygens.lobsang.api.DateRequest;
-import nl.knaw.huygens.lobsang.api.DayMonthYear;
+import nl.knaw.huygens.lobsang.api.YearMonthDay;
 
 public class JulianConverter extends JulianGregorianConverterBase {
   @Override
@@ -18,7 +18,7 @@ public class JulianConverter extends JulianGregorianConverterBase {
   }
 
   @Override
-  public DayMonthYear fromJulianDay(int julianDay) {
+  public YearMonthDay fromJulianDay(int julianDay) {
     final int J = julianDay;
 
     // 1. For Julian calendar: f = J + j
