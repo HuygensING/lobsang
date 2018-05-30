@@ -30,6 +30,8 @@ public class CalendarGuesser {
             break;
           case julian:
             break;
+          default:
+            break;
         }
       });
     }

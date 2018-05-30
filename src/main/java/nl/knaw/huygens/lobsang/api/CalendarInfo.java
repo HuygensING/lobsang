@@ -7,10 +7,10 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 
 public class CalendarInfo {
   @JsonProperty("type")
-  CalendarType type;
+  private CalendarType type;
 
   @JsonProperty("start")
-  String startDate;
+  private String startDate;
 
   public CalendarType getType() {
     return type;
@@ -24,7 +24,7 @@ public class CalendarInfo {
   public String toString() {
     return toStringHelper(this)
       .add("type", type)
-      .add("startdate", startDate)
+      .add("startDate", startDate)
       .toString();
   }
 }

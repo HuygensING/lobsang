@@ -4,8 +4,11 @@ import io.dropwizard.Application;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import nl.knaw.huygens.lobsang.api.KnownCalendar;
+import nl.knaw.huygens.lobsang.core.ConverterRegistry;
+import nl.knaw.huygens.lobsang.core.converters.CalendarConverter;
 import nl.knaw.huygens.lobsang.resources.AboutResource;
-import nl.knaw.huygens.lobsang.resources.DateConversionResource;
+import nl.knaw.huygens.lobsang.resources.ConversionResource;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +17,8 @@ import org.slf4j.MDC;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Optional;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -22,6 +27,8 @@ import static java.util.jar.Attributes.Name.IMPLEMENTATION_TITLE;
 
 public class LobsangApplication extends Application<LobsangConfiguration> {
   private static final Logger LOG = LoggerFactory.getLogger(LobsangApplication.class);
+
+  private ConverterRegistry converterRegistry;
 
   private static Manifest findManifest(String name) throws IOException {
     Enumeration<URL> resources = Thread.currentThread().getContextClassLoader()
@@ -55,13 +62,34 @@ public class LobsangApplication extends Application<LobsangConfiguration> {
 
   public void run(LobsangConfiguration lobsangConfiguration, Environment environment) throws IOException {
     setupLogging(environment);
+    registerKnownCalendars(lobsangConfiguration.getKnownCalendars());
+    LOG.warn("registered locations: {}", lobsangConfiguration.getLocationInfo());
     registerResources(environment.jersey());
-    LOG.warn("registered calendars: {}", lobsangConfiguration.getLocationInfo());
+  }
+
+  private void registerKnownCalendars(List<KnownCalendar> knownCalendars) {
+    converterRegistry = new ConverterRegistry();
+    knownCalendars.forEach(this::registerKnownCalendar);
+    LOG.warn("registered calendars: {}", converterRegistry.list());
+  }
+
+  private void registerKnownCalendar(KnownCalendar knownCalendar) {
+    instantiateCalendarConverter(knownCalendar.getImplementationClass())
+      .ifPresent(converter -> converterRegistry.register(knownCalendar.getName(), converter));
   }
 
   private void registerResources(JerseyEnvironment jersey) throws IOException {
     jersey.register(new AboutResource(findManifest(getName())));
-    jersey.register(new DateConversionResource());
+    jersey.register(new ConversionResource(converterRegistry));
+  }
+
+  private Optional<CalendarConverter> instantiateCalendarConverter(String implementationClass) {
+    try {
+      return Optional.of((CalendarConverter) Class.forName(implementationClass).newInstance());
+    } catch (Exception e) {
+      LOG.warn("Failed to instantiate calendar converter: {}", implementationClass, e);
+      return Optional.empty();
+    }
   }
 
   private void setupLogging(Environment environment) {

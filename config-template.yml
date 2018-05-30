@@ -16,6 +16,14 @@ server:
       layout:
         type: access-json
 
+knownCalendars:
+- name: gregorian
+  class: nl.knaw.huygens.lobsang.core.converters.GregorianConverter
+- name: julian
+  class: nl.knaw.huygens.lobsang.core.converters.JulianConverter
+- name: roman
+  class: nl.knaw.huygens.lobsang.core.converters.RomanConverter
+
 locationInfo:
 - location: Austria, Bohemia
   calendars:
@@ -37,3 +45,4 @@ locationInfo:
     start: 1594-11-10
   - type: gregorian
     start: 1700-01-01
+
