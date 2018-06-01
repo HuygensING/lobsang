@@ -21,3 +21,17 @@ server:
     - type: console
       layout:
         type: access-json
+
+knownCalendars:
+- name: default
+  class: nl.knaw.huygens.lobsang.core.converters.JulianConverter
+- name: gregorian
+  class: nl.knaw.huygens.lobsang.core.converters.GregorianConverter
+- name: julian
+  class: nl.knaw.huygens.lobsang.core.converters.JulianConverter
+
+locationInfo:
+- location: locA
+  calendars:
+  - type: gregorian
+    start: 1584-01-17

@@ -1,11 +1,10 @@
 package nl.knaw.huygens.lobsang.core.converters;
 
-import nl.knaw.huygens.lobsang.api.DateRequest;
 import nl.knaw.huygens.lobsang.api.YearMonthDay;
 
 public class GregorianConverter extends JulianGregorianConverterBase {
   @Override
-  public int toJulianDay(DateRequest date) {
+  public int toJulianDay(YearMonthDay date) {
     final int Y = date.getYear();
     final int M = date.getMonth();
     final int D = date.getDay();

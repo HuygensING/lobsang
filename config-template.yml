@@ -17,32 +17,35 @@ server:
         type: access-json
 
 knownCalendars:
+- name: default
+  class: nl.knaw.huygens.lobsang.core.converters.JulianConverter
 - name: gregorian
   class: nl.knaw.huygens.lobsang.core.converters.GregorianConverter
 - name: julian
   class: nl.knaw.huygens.lobsang.core.converters.JulianConverter
-- name: roman
-  class: nl.knaw.huygens.lobsang.core.converters.RomanConverter
+#- name: roman
+#  class: nl.knaw.huygens.lobsang.core.converters.RomanConverter
 
 locationInfo:
-- location: Austria, Bohemia
-  calendars:
-  - type: gregorian
-    start: 1584-01-17
-- location: Austria, Brixen, Salzburg and Tyrol
-  calendars:
-  - type: gregorian
-    start: 1583-10-16
-- location: Dutch Republic, Gelderland
-  calendars:
-  - type: gregorian
-    start: 1700-07-12
-- location: Groningen (City)
-  calendars:
-  - type: gregorian
-    start: 1583-03-11
-  - type: julian
-    start: 1594-11-10
-  - type: gregorian
-    start: 1700-01-01
-
+  - location: Austria, Bohemia
+    calendars:
+#    - type: julian
+#      end: 1584-1-6
+    - type: gregorian
+      start: 1584-01-17
+  - location: Austria, Brixen, Salzburg and Tyrol
+    calendars:
+    - type: gregorian
+      start: 1583-10-16
+  - location: Dutch Republic, Gelderland
+    calendars:
+    - type: gregorian
+      start: 1700-07-12
+  - location: Groningen (City)
+    calendars:
+    - type: gregorian
+      start: 1583-03-11
+    - type: julian
+      start: 1594-11-10
+    - type: gregorian
+      start: 1700-01-01

@@ -5,7 +5,9 @@ import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.huygens.lobsang.api.KnownCalendar;
+import nl.knaw.huygens.lobsang.api.LocationInfo;
 import nl.knaw.huygens.lobsang.core.ConverterRegistry;
+import nl.knaw.huygens.lobsang.core.LocationRegistry;
 import nl.knaw.huygens.lobsang.core.converters.CalendarConverter;
 import nl.knaw.huygens.lobsang.resources.AboutResource;
 import nl.knaw.huygens.lobsang.resources.ConversionResource;
@@ -29,6 +31,7 @@ public class LobsangApplication extends Application<LobsangConfiguration> {
   private static final Logger LOG = LoggerFactory.getLogger(LobsangApplication.class);
 
   private ConverterRegistry converterRegistry;
+  private LocationRegistry locationRegistry;
 
   private static Manifest findManifest(String name) throws IOException {
     Enumeration<URL> resources = Thread.currentThread().getContextClassLoader()
@@ -63,8 +66,14 @@ public class LobsangApplication extends Application<LobsangConfiguration> {
   public void run(LobsangConfiguration lobsangConfiguration, Environment environment) throws IOException {
     setupLogging(environment);
     registerKnownCalendars(lobsangConfiguration.getKnownCalendars());
+    registerLocations(lobsangConfiguration.getLocationInfo());
     LOG.warn("registered locations: {}", lobsangConfiguration.getLocationInfo());
     registerResources(environment.jersey());
+  }
+
+  private void registerLocations(List<LocationInfo> locationInfoList) {
+    locationRegistry = new LocationRegistry();
+    locationInfoList.forEach(li -> locationRegistry.addLocationCalendar(li.getLocation(), li.getCalendars()));
   }
 
   private void registerKnownCalendars(List<KnownCalendar> knownCalendars) {
@@ -80,7 +89,7 @@ public class LobsangApplication extends Application<LobsangConfiguration> {
 
   private void registerResources(JerseyEnvironment jersey) throws IOException {
     jersey.register(new AboutResource(findManifest(getName())));
-    jersey.register(new ConversionResource(converterRegistry));
+    jersey.register(new ConversionResource(converterRegistry, locationRegistry));
   }
 
   private Optional<CalendarConverter> instantiateCalendarConverter(String implementationClass) {

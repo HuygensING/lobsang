@@ -1,18 +1,20 @@
 package nl.knaw.huygens.lobsang.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import nl.knaw.huygens.lobsang.core.CalendarType;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
 public class CalendarInfo {
   @JsonProperty("type")
-  private CalendarType type;
+  private String type;
 
   @JsonProperty("start")
   private String startDate;
 
-  public CalendarType getType() {
+  @JsonProperty("end")
+  private String endDate;
+
+  public String getType() {
     return type;
   }
 
@@ -20,11 +22,16 @@ public class CalendarInfo {
     return startDate;
   }
 
+  public String getEndDate() {
+    return endDate;
+  }
+
   @Override
   public String toString() {
     return toStringHelper(this)
       .add("type", type)
       .add("startDate", startDate)
+      .add("endDate", endDate)
       .toString();
   }
 }

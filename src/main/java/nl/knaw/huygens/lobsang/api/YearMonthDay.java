@@ -2,6 +2,7 @@ package nl.knaw.huygens.lobsang.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.google.common.base.MoreObjects;
 
 @JsonPropertyOrder({"year", "month", "day"})
 public class YearMonthDay {
@@ -30,4 +31,14 @@ public class YearMonthDay {
   public int getDay() {
     return day;
   }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+                      .add("year", year)
+                      .add("month", month)
+                      .add("day", day)
+                      .toString();
+  }
+
 }
