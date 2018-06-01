@@ -1,21 +1,22 @@
 package nl.knaw.huygens.lobsang.api;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import org.assertj.core.util.Lists;
 
-import java.util.ArrayList;
 import java.util.List;
 
-@JsonPropertyOrder({"date", "notes", "hints"})
+@JsonInclude(Include.NON_EMPTY)
+@JsonPropertyOrder({"date", "hints"})
 public class DateResult {
-  private final List<String> hints;
-  private final List<String> notes;
   private final YearMonthDay date;
+
+  private List<String> hints;
 
   public DateResult(YearMonthDay date) {
     this.date = date;
-    this.hints = new ArrayList<>();
-    this.notes = new ArrayList<>();
   }
 
   @JsonProperty
@@ -23,21 +24,16 @@ public class DateResult {
     return date;
   }
 
-  public void addHint(String hint) {
-    hints.add(hint);
-  }
-
   @JsonProperty
   public List<String> getHints() {
     return hints;
   }
 
-  public void addNote(String note) {
-    notes.add(note);
-  }
-
-  @JsonProperty
-  public List<String> getNotes() {
-    return notes;
+  public void addHint(String hint) {
+    if (hints == null) {
+      hints = Lists.newArrayList(hint);
+    } else {
+      hints.add(hint);
+    }
   }
 }

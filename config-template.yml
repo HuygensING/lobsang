@@ -19,9 +19,9 @@ server:
 knownCalendars:
 - name: default
   class: nl.knaw.huygens.lobsang.core.converters.JulianConverter
-- name: gregorian
+- name: Gregorian
   class: nl.knaw.huygens.lobsang.core.converters.GregorianConverter
-- name: julian
+- name: Julian
   class: nl.knaw.huygens.lobsang.core.converters.JulianConverter
 #- name: roman
 #  class: nl.knaw.huygens.lobsang.core.converters.RomanConverter
@@ -29,23 +29,35 @@ knownCalendars:
 locationInfo:
   - location: Austria, Bohemia
     calendars:
-#    - type: julian
-#      end: 1584-1-6
-    - type: gregorian
+    - type: Julian
+      end: 1584-01-06
+    - type: Gregorian
       start: 1584-01-17
   - location: Austria, Brixen, Salzburg and Tyrol
     calendars:
-    - type: gregorian
+    - type: Julian
+      end: 1583-10-05
+    - type: Gregorian
       start: 1583-10-16
   - location: Dutch Republic, Gelderland
     calendars:
-    - type: gregorian
+    - type: Gregorian
       start: 1700-07-12
+  - location: Dutch Republic, Friesland and Groningen
+    calendars:
+    - type: Julian
+      end: 1700-12-31
+    - type: Gregorian
+      start: 1701-01-12
   - location: Groningen (City)
     calendars:
-    - type: gregorian
+    - type: Julian
+      end: 1583-02-28
+    - type: Gregorian
       start: 1583-03-11
-    - type: julian
+      end: 1594-11-19
+    - type: Julian
       start: 1594-11-10
-    - type: gregorian
+      end: 1699-12-31
+    - type: Gregorian
       start: 1700-01-01

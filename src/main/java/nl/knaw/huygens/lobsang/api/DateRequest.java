@@ -10,12 +10,10 @@ public class DateRequest {
   private static final Logger LOG = LoggerFactory.getLogger(DateRequest.class);
 
   private int year;
-
   private int month;
-
   private int day;
-
   private String location;
+  private String type; // convert date to which calendar?
 
   public DateRequest() {
     // Jackson deserialization
@@ -52,6 +50,11 @@ public class DateRequest {
     return location;
   }
 
+  @JsonProperty
+  public String getType() {
+    return type;
+  }
+
   @Override
   public String toString() {
     return toStringHelper(this)
@@ -59,6 +62,7 @@ public class DateRequest {
       .add("month", month)
       .add("day", day)
       .add("location", location)
+      .add("type", type)
       .toString();
   }
 }

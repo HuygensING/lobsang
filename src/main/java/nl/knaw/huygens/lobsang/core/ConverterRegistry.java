@@ -20,11 +20,11 @@ public class ConverterRegistry {
   }
 
   public CalendarConverter get(String type) {
-    return convertersByType.get(type);
+    return convertersByType.get(type.toLowerCase());
   }
 
   public void register(String type, CalendarConverter converter) {
-    convertersByType.put(checkNotNull(type), checkNotNull(converter));
+    convertersByType.put(checkNotNull(type).toLowerCase(), checkNotNull(converter));
   }
 
   public CalendarConverter defaultConverter() {
