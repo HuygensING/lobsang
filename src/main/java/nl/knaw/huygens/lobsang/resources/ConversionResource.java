@@ -1,5 +1,6 @@
 package nl.knaw.huygens.lobsang.resources;
 
+import com.google.common.collect.Sets;
 import nl.knaw.huygens.lobsang.api.CalendarPeriod;
 import nl.knaw.huygens.lobsang.api.DateRequest;
 import nl.knaw.huygens.lobsang.api.DateResult;
@@ -61,10 +62,7 @@ public class ConversionResource {
       .peek(candidates::add)
       .map(convertForPlace(dateRequest))
       .flatMap(Function.identity())
-      .collect(Collectors.toMap(ymd -> ymd, YearMonthDay::getNotes, (s1, s2) -> {
-        s1.addAll(s2);
-        return s1;
-      }));
+      .collect(Collectors.toMap(ymd -> ymd, YearMonthDay::getNotes, Sets::union));
 
     // collate notes
     suggestions.keySet().forEach(yearMonthDay -> yearMonthDay.setNotes(suggestions.get(yearMonthDay)));
