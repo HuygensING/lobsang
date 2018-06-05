@@ -23,7 +23,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -55,12 +57,16 @@ public class ConversionResource {
 
     final List<Place> candidates = Lists.newArrayList();
 
-    final List<YearMonthDay> suggestions = matchingPlaces(searchTerms)
+    final Map<YearMonthDay,Set<String>> suggestions = matchingPlaces(searchTerms)
       .peek(candidates::add)
       .map(convertForPlace(dateRequest))
       .flatMap(Function.identity())
-      .distinct() // relies on 'YearMonthDay::equals'
-      .collect(Collectors.toList());
+      .collect(Collectors.toMap(ymd -> ymd, YearMonthDay::getNotes, (s1,s2) -> {s1.addAll(s2); return s1;}));
+
+    // collate notes
+    suggestions.keySet().forEach(yearMonthDay -> yearMonthDay.setNotes(suggestions.get(yearMonthDay)));
+
+    LOG.debug("suggestions: {}", suggestions);
 
     final DateResult result;
     if (suggestions.isEmpty()) {
@@ -69,7 +75,7 @@ public class ConversionResource {
       result.addHint("Requested date lies outside all defined calendar ranges, assuming default calendar was in use.");
     } else {
       LOG.debug("suggestions (size {}): {}", suggestions.size(), suggestions);
-      result = new DateResult(suggestions);
+      result = new DateResult(Lists.newArrayList(suggestions.keySet()));
     }
 
     if (candidates.size() > 1) {

@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.MoreObjects;
-import org.assertj.core.util.Lists;
 
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @JsonInclude(Include.NON_EMPTY)
 @JsonPropertyOrder({"year", "month", "day", "notes"})
@@ -17,7 +17,7 @@ public class YearMonthDay {
   private final int month;
   private final int year;
 
-  private List<String> notes;
+  private Set<String> notes;
 
   public YearMonthDay(int year, int month, int day) {
     this.year = year;
@@ -41,16 +41,20 @@ public class YearMonthDay {
   }
 
   @JsonProperty
-  public List<String> getNotes() {
+  public Set<String> getNotes() {
     return notes;
   }
 
   public void addNote(String note) {
     if (notes == null) {
-      notes = Lists.newArrayList(note);
-    } else {
-      notes.add(note);
+      notes = new HashSet<>();
     }
+
+    notes.add(note);
+  }
+
+  public void setNotes(Set<String> notes) {
+    this.notes = notes;
   }
 
   @Override
@@ -74,12 +78,11 @@ public class YearMonthDay {
     YearMonthDay that = (YearMonthDay) obj;
     return day == that.day &&
       month == that.month &&
-      year == that.year &&
-      Objects.equals(notes, that.notes);
+      year == that.year;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(day, month, year, notes);
+    return Objects.hash(day, month, year);
   }
 }
