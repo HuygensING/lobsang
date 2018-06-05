@@ -5,7 +5,7 @@ import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.huygens.lobsang.api.KnownCalendar;
-import nl.knaw.huygens.lobsang.api.LocationInfo;
+import nl.knaw.huygens.lobsang.api.Place;
 import nl.knaw.huygens.lobsang.core.ConverterRegistry;
 import nl.knaw.huygens.lobsang.core.LocationRegistry;
 import nl.knaw.huygens.lobsang.core.converters.CalendarConverter;
@@ -66,14 +66,14 @@ public class LobsangApplication extends Application<LobsangConfiguration> {
   public void run(LobsangConfiguration lobsangConfiguration, Environment environment) throws IOException {
     setupLogging(environment);
     registerKnownCalendars(lobsangConfiguration.getKnownCalendars());
-    registerLocations(lobsangConfiguration.getLocationInfo());
-    LOG.warn("registered locations: {}", lobsangConfiguration.getLocationInfo());
+    registerLocations(lobsangConfiguration.getPlaces());
+    LOG.warn("registered locations: {}", lobsangConfiguration.getPlaces());
     registerResources(environment.jersey());
   }
 
-  private void registerLocations(List<LocationInfo> locationInfoList) {
+  private void registerLocations(List<Place> locationInfoList) {
     locationRegistry = new LocationRegistry();
-    locationInfoList.forEach(li -> locationRegistry.addLocationCalendar(li.getLocation(), li.getCalendars()));
+    locationInfoList.forEach(li -> locationRegistry.addLocationCalendar(li.getName(), li.getCalendars()));
   }
 
   private void registerKnownCalendars(List<KnownCalendar> knownCalendars) {

@@ -4,9 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
-public class CalendarInfo {
-  @JsonProperty("type")
-  private String type;
+/**
+ * Period during which a given calendar is actively used
+ */
+public class CalendarPeriod {
+  @JsonProperty("calendar")
+  private String calendar;
 
   @JsonProperty("start")
   private String startDate;
@@ -14,8 +17,8 @@ public class CalendarInfo {
   @JsonProperty("end")
   private String endDate;
 
-  public String getType() {
-    return type;
+  public String getCalendar() {
+    return calendar;
   }
 
   public String getStartDate() {
@@ -29,7 +32,7 @@ public class CalendarInfo {
   @Override
   public String toString() {
     return toStringHelper(this)
-      .add("type", type)
+      .add("calendar", calendar)
       .add("startDate", startDate)
       .add("endDate", endDate)
       .toString();

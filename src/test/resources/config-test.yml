@@ -30,8 +30,8 @@ knownCalendars:
 - name: julian
   class: nl.knaw.huygens.lobsang.core.converters.JulianConverter
 
-locationInfo:
-- location: locA
+places:
+- name: somewhere
   calendars:
-  - type: gregorian
+  - calendar: gregorian
     start: 1584-01-17

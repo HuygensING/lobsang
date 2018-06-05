@@ -6,17 +6,17 @@ import java.util.List;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
-public class LocationInfo {
-  private String location;
-  private List<CalendarInfo> calendars;
+public class Place {
+  private String name;
+  private List<CalendarPeriod> calendars;
 
   @JsonProperty
-  public String getLocation() {
-    return location;
+  public String getName() {
+    return name;
   }
 
   @JsonProperty
-  public List<CalendarInfo> getCalendars() {
+  public List<CalendarPeriod> getCalendars() {
     return calendars;
   }
 
@@ -24,7 +24,7 @@ public class LocationInfo {
   @Override
   public String toString() {
     return toStringHelper(this)
-      .add("location", location)
+      .add("name", name)
       .add("calendars", calendars)
       .toString();
   }

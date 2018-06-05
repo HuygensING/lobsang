@@ -9,19 +9,23 @@ import org.assertj.core.util.Lists;
 import java.util.List;
 
 @JsonInclude(Include.NON_EMPTY)
-@JsonPropertyOrder({"date", "hints"})
+@JsonPropertyOrder({"dates", "hints"})
 public class DateResult {
-  private final YearMonthDay date;
+  private final List<YearMonthDay> dates;
 
   private List<String> hints;
 
   public DateResult(YearMonthDay date) {
-    this.date = date;
+    this(Lists.newArrayList(date));
+  }
+
+  public DateResult(List<YearMonthDay> dates) {
+    this.dates = dates;
   }
 
   @JsonProperty
-  public YearMonthDay getDate() {
-    return date;
+  public List<YearMonthDay> getDates() {
+    return dates;
   }
 
   @JsonProperty

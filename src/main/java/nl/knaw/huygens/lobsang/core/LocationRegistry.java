@@ -1,16 +1,17 @@
 package nl.knaw.huygens.lobsang.core;
 
-import nl.knaw.huygens.lobsang.api.CalendarInfo;
+import nl.knaw.huygens.lobsang.api.CalendarPeriod;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public class LocationRegistry {
-  private final Map<String, List<CalendarInfo>> calendarsByLocation = new HashMap<>();
+  private final Map<String, List<CalendarPeriod>> calendarsByLocation = new HashMap<>();
 
-  public void addLocationCalendar(String location, List<CalendarInfo> calendars) {
+  public void addLocationCalendar(String location, List<CalendarPeriod> calendars) {
     calendarsByLocation.put(location, calendars);
   }
 
@@ -18,7 +19,11 @@ public class LocationRegistry {
     return calendarsByLocation.keySet();
   }
 
-  public List<CalendarInfo> get(String location) {
+  public Stream<String> stream() {
+    return list().stream();
+  }
+
+  public List<CalendarPeriod> get(String location) {
     return calendarsByLocation.get(location);
   }
 }

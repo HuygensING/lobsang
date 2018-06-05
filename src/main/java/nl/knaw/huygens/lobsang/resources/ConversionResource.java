@@ -1,6 +1,6 @@
 package nl.knaw.huygens.lobsang.resources;
 
-import nl.knaw.huygens.lobsang.api.CalendarInfo;
+import nl.knaw.huygens.lobsang.api.CalendarPeriod;
 import nl.knaw.huygens.lobsang.api.DateRequest;
 import nl.knaw.huygens.lobsang.api.DateResult;
 import nl.knaw.huygens.lobsang.api.YearMonthDay;
@@ -54,7 +54,7 @@ public class ConversionResource {
 
     final List<String> candidates = Lists.newArrayList();
 
-    final List<YearMonthDay> suggestions = locations.list().stream()
+    final List<YearMonthDay> suggestions = locations.stream()
                                                     .filter(isMatchingLocation(searchTerms))
                                                     .peek(x -> candidates.add('"' + x + '"'))
                                                     .map(locations::get)
@@ -72,14 +72,15 @@ public class ConversionResource {
       result.addHint("Requested date lies outside all defined calendar ranges, assuming default calendar was in use.");
     } else {
       LOG.debug("suggestions (size {}): {}", suggestions.size(), suggestions);
-      result = new DateResult(suggestions.get(0)); // just the first one for now!
+      result = new DateResult(suggestions);
     }
 
     if (candidates.size() > 1) {
       result
         .addHint(String.format("Multiple calendars found for '%s', retry with a specific one for greater accuracy: %s",
-          dateRequest.getLocation(),candidates));
+          dateRequest.getLocation(), candidates));
     }
+
     return result;
   }
 
@@ -101,9 +102,9 @@ public class ConversionResource {
     return new YearMonthDay(dateRequest.getYear(), dateRequest.getMonth(), dateRequest.getDay());
   }
 
-  private Function<CalendarInfo, Optional<YearMonthDay>> tryDateConversion(DateRequest dateRequest) {
-    return calendarInfo -> {
-      final CalendarConverter requestConverter = converters.get(calendarInfo.getType());
+  private Function<CalendarPeriod, Optional<YearMonthDay>> tryDateConversion(DateRequest dateRequest) {
+    return calendarPeriod -> {
+      final CalendarConverter requestConverter = converters.get(calendarPeriod.getCalendar());
       final int requestDate = requestConverter.toJulianDay(asYearMonthDay(dateRequest));
 
       // Assuming this calendar is applicable, 'result' is the requestDate converted to the desired calendar
@@ -111,27 +112,31 @@ public class ConversionResource {
       final YearMonthDay result = resultConverter.fromJulianDay(requestDate);
 
       // Determine if this calendar is applicable for the given date and annotate result as appropriate
-      final String startDateAsString = calendarInfo.getStartDate();
-      final String endDateAsString = calendarInfo.getEndDate();
+      final String startDateAsString = calendarPeriod.getStartDate();
+      final String endDateAsString = calendarPeriod.getEndDate();
       if (startDateAsString != null && endDateAsString != null) {
         final int startDate = requestConverter.toJulianDay(asYearMonthDay(startDateAsString));
         final int endDate = requestConverter.toJulianDay(asYearMonthDay(endDateAsString));
         if (requestDate >= startDate && requestDate <= endDate) {
-          result.addNote(String.format("Date within '%s' calendar start and end bounds", calendarInfo.getType()));
+          result.addNote(String.format("Date within '%s' calendar start and end bounds",
+            calendarPeriod.getCalendar()));
           return Optional.of(result);
         }
       } else if (startDateAsString != null) {
         if (requestDate >= requestConverter.toJulianDay(asYearMonthDay(startDateAsString))) {
-          result.addNote(String.format("Date on or after start of '%s' calendar", calendarInfo.getType()));
+          result.addNote(String.format("Date on or after start of '%s' calendar",
+            calendarPeriod.getCalendar()));
           return Optional.of(result);
         }
       } else if (endDateAsString != null) {
         if (requestDate <= requestConverter.toJulianDay(asYearMonthDay(endDateAsString))) {
-          result.addNote(String.format("Date on or before end of '%s' calendar", calendarInfo.getType()));
+          result.addNote(String.format("Date on or before end of '%s' calendar",
+            calendarPeriod.getCalendar()));
           return Optional.of(result);
         }
       } else {
-        result.addNote(String.format("Calendar '%s' apparently has no defined start or end", calendarInfo.getType()));
+        result.addNote(String.format("Calendar '%s' apparently has no defined start or end",
+          calendarPeriod.getCalendar()));
         return Optional.of(result);
       }
 
