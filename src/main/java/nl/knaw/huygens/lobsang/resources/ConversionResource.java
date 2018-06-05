@@ -59,8 +59,9 @@ public class ConversionResource {
       .peek(candidates::add)
       .map(convertForPlace(dateRequest))
       .flatMap(Function.identity())
-      .distinct() // requires 'equals()' in YearMonthDay
+      .distinct() // relies on 'YearMonthDay::equals'
       .collect(Collectors.toList());
+
     final DateResult result;
     if (suggestions.isEmpty()) {
       int defaultDate = converters.defaultConverter().toJulianDay(asYearMonthDay(dateRequest));
@@ -76,7 +77,7 @@ public class ConversionResource {
                                                     .map(place -> String.format("\"%s\"", place.getName()))
                                                     .sorted()
                                                     .collect(Collectors.toList());
-      final String format = "Multiple candidates matched '%s': %s. Try being more specific for greater accuracy.";
+      final String format = "Multiple places matched '%s': %s. Being more specific may increase accuracy.";
       result.addHint(String.format(format, dateRequest.getLocation(), candidateNames));
     }
 
@@ -88,7 +89,7 @@ public class ConversionResource {
                          .map(tryDateConversion(dateRequest))
                          .filter(Optional::isPresent)
                          .map(Optional::get)
-                         .peek(it -> it.addNote(String.format("Based on place: '%s'", place.getName())));
+                         .peek(it -> it.addNote(String.format("Based on data for place: '%s'", place.getName())));
   }
 
   private Stream<Place> matchingPlaces(String[] terms) {
@@ -129,24 +130,24 @@ public class ConversionResource {
         final int startDate = requestConverter.toJulianDay(asYearMonthDay(startDateAsString));
         final int endDate = requestConverter.toJulianDay(asYearMonthDay(endDateAsString));
         if (requestDate >= startDate && requestDate <= endDate) {
-          result.addNote(String.format("Date within '%s' calendar start and end bounds",
+          result.addNote(String.format("Date within %s calendar start and end bounds",
             calendarPeriod.getCalendar()));
           return Optional.of(result);
         }
       } else if (startDateAsString != null) {
         if (requestDate >= requestConverter.toJulianDay(asYearMonthDay(startDateAsString))) {
-          result.addNote(String.format("Date on or after start of '%s' calendar",
+          result.addNote(String.format("Date on or after start of %s calendar",
             calendarPeriod.getCalendar()));
           return Optional.of(result);
         }
       } else if (endDateAsString != null) {
         if (requestDate <= requestConverter.toJulianDay(asYearMonthDay(endDateAsString))) {
-          result.addNote(String.format("Date on or before end of '%s' calendar",
+          result.addNote(String.format("Date on or before end of %s calendar",
             calendarPeriod.getCalendar()));
           return Optional.of(result);
         }
       } else {
-        result.addNote(String.format("Calendar '%s' apparently has no defined start or end",
+        result.addNote(String.format("No start or end defined for %s calendar (always in use?)",
           calendarPeriod.getCalendar()));
         return Optional.of(result);
       }
