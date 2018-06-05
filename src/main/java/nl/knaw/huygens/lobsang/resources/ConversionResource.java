@@ -57,11 +57,14 @@ public class ConversionResource {
 
     final List<Place> candidates = Lists.newArrayList();
 
-    final Map<YearMonthDay,Set<String>> suggestions = matchingPlaces(searchTerms)
+    final Map<YearMonthDay, Set<String>> suggestions = matchingPlaces(searchTerms)
       .peek(candidates::add)
       .map(convertForPlace(dateRequest))
       .flatMap(Function.identity())
-      .collect(Collectors.toMap(ymd -> ymd, YearMonthDay::getNotes, (s1,s2) -> {s1.addAll(s2); return s1;}));
+      .collect(Collectors.toMap(ymd -> ymd, YearMonthDay::getNotes, (s1, s2) -> {
+        s1.addAll(s2);
+        return s1;
+      }));
 
     // collate notes
     suggestions.keySet().forEach(yearMonthDay -> yearMonthDay.setNotes(suggestions.get(yearMonthDay)));
