@@ -3,9 +3,10 @@ package nl.knaw.huygens.lobsang.resources;
 import nl.knaw.huygens.lobsang.api.CalendarPeriod;
 import nl.knaw.huygens.lobsang.api.DateRequest;
 import nl.knaw.huygens.lobsang.api.DateResult;
+import nl.knaw.huygens.lobsang.api.Place;
 import nl.knaw.huygens.lobsang.api.YearMonthDay;
 import nl.knaw.huygens.lobsang.core.ConverterRegistry;
-import nl.knaw.huygens.lobsang.core.LocationRegistry;
+import nl.knaw.huygens.lobsang.core.PlaceRegistry;
 import nl.knaw.huygens.lobsang.core.converters.CalendarConverter;
 import org.assertj.core.util.Lists;
 import org.slf4j.Logger;
@@ -21,12 +22,12 @@ import javax.ws.rs.core.MediaType;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -38,11 +39,11 @@ public class ConversionResource {
   private static final Logger LOG = LoggerFactory.getLogger(ConversionResource.class);
 
   private final ConverterRegistry converters;
-  private final LocationRegistry locations;
+  private final PlaceRegistry places;
 
-  public ConversionResource(ConverterRegistry converters, LocationRegistry locations) {
+  public ConversionResource(ConverterRegistry converters, PlaceRegistry places) {
     this.converters = checkNotNull(converters);
-    this.locations = checkNotNull(locations);
+    this.places = checkNotNull(places);
   }
 
   @POST
@@ -52,19 +53,14 @@ public class ConversionResource {
     final String location = dateRequest.getLocation();
     final String[] searchTerms = location.toLowerCase().split("\\s");
 
-    final List<String> candidates = Lists.newArrayList();
+    final List<Place> candidates = Lists.newArrayList();
 
-    final List<YearMonthDay> suggestions = locations.stream()
-                                                    .filter(isMatchingLocation(searchTerms))
-                                                    .peek(x -> candidates.add('"' + x + '"'))
-                                                    .map(locations::get)
-                                                    .flatMap(Collection::stream)
-                                                    .map(tryDateConversion(dateRequest))
-                                                    // condense next two lines in Java 9 to flatMap(Optional::stream)
-                                                    .filter(Optional::isPresent)
-                                                    .map(Optional::get)
-                                                    .distinct() // requires 'equals()' in YearMonthDay
-                                                    .collect(Collectors.toList());
+    final List<YearMonthDay> suggestions = matchingPlaces(searchTerms)
+      .peek(candidates::add)
+      .map(convertForPlace(dateRequest))
+      .flatMap(Function.identity())
+      .distinct() // requires 'equals()' in YearMonthDay
+      .collect(Collectors.toList());
     final DateResult result;
     if (suggestions.isEmpty()) {
       int defaultDate = converters.defaultConverter().toJulianDay(asYearMonthDay(dateRequest));
@@ -76,12 +72,27 @@ public class ConversionResource {
     }
 
     if (candidates.size() > 1) {
-      result
-        .addHint(String.format("Multiple calendars found for '%s', retry with a specific one for greater accuracy: %s",
-          dateRequest.getLocation(), candidates));
+      final List<String> candidateNames = candidates.stream()
+                                                    .map(place -> String.format("\"%s\"", place.getName()))
+                                                    .sorted()
+                                                    .collect(Collectors.toList());
+      final String format = "Multiple candidates matched '%s': %s. Try being more specific for greater accuracy.";
+      result.addHint(String.format(format, dateRequest.getLocation(), candidateNames));
     }
 
     return result;
+  }
+
+  private Function<Place, Stream<YearMonthDay>> convertForPlace(DateRequest dateRequest) {
+    return place -> place.getCalendars().stream()
+                         .map(tryDateConversion(dateRequest))
+                         .filter(Optional::isPresent)
+                         .map(Optional::get)
+                         .peek(it -> it.addNote(String.format("Based on place: '%s'", place.getName())));
+  }
+
+  private Stream<Place> matchingPlaces(String[] terms) {
+    return places.stream().filter(isMatchingLocation(terms)).map(places::get);
   }
 
   private Predicate<String> isMatchingLocation(String[] terms) {

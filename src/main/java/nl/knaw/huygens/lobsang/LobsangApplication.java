@@ -7,7 +7,7 @@ import io.dropwizard.setup.Environment;
 import nl.knaw.huygens.lobsang.api.KnownCalendar;
 import nl.knaw.huygens.lobsang.api.Place;
 import nl.knaw.huygens.lobsang.core.ConverterRegistry;
-import nl.knaw.huygens.lobsang.core.LocationRegistry;
+import nl.knaw.huygens.lobsang.core.PlaceRegistry;
 import nl.knaw.huygens.lobsang.core.converters.CalendarConverter;
 import nl.knaw.huygens.lobsang.resources.AboutResource;
 import nl.knaw.huygens.lobsang.resources.ConversionResource;
@@ -31,7 +31,7 @@ public class LobsangApplication extends Application<LobsangConfiguration> {
   private static final Logger LOG = LoggerFactory.getLogger(LobsangApplication.class);
 
   private ConverterRegistry converterRegistry;
-  private LocationRegistry locationRegistry;
+  private PlaceRegistry placeRegistry;
 
   private static Manifest findManifest(String name) throws IOException {
     Enumeration<URL> resources = Thread.currentThread().getContextClassLoader()
@@ -71,9 +71,8 @@ public class LobsangApplication extends Application<LobsangConfiguration> {
     registerResources(environment.jersey());
   }
 
-  private void registerLocations(List<Place> locationInfoList) {
-    locationRegistry = new LocationRegistry();
-    locationInfoList.forEach(li -> locationRegistry.addLocationCalendar(li.getName(), li.getCalendars()));
+  private void registerLocations(List<Place> places) {
+    placeRegistry = new PlaceRegistry(places);
   }
 
   private void registerKnownCalendars(List<KnownCalendar> knownCalendars) {
@@ -89,7 +88,7 @@ public class LobsangApplication extends Application<LobsangConfiguration> {
 
   private void registerResources(JerseyEnvironment jersey) throws IOException {
     jersey.register(new AboutResource(findManifest(getName())));
-    jersey.register(new ConversionResource(converterRegistry, locationRegistry));
+    jersey.register(new ConversionResource(converterRegistry, placeRegistry));
   }
 
   private Optional<CalendarConverter> instantiateCalendarConverter(String implementationClass) {
