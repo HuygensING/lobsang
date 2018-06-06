@@ -6,8 +6,7 @@ import nl.knaw.huygens.lobsang.api.DateRequest;
 import nl.knaw.huygens.lobsang.api.DateResult;
 import nl.knaw.huygens.lobsang.api.Place;
 import nl.knaw.huygens.lobsang.api.YearMonthDay;
-import nl.knaw.huygens.lobsang.core.ConverterRegistry;
-import nl.knaw.huygens.lobsang.core.converters.CalendarConverter;
+import nl.knaw.huygens.lobsang.core.ConversionService;
 import nl.knaw.huygens.lobsang.core.places.PlaceMatcher;
 import nl.knaw.huygens.lobsang.core.places.SearchTermBuilder;
 import org.assertj.core.util.Lists;
@@ -21,8 +20,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,18 +34,20 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ConversionResource {
-  private static final DateTimeFormatter YYYY_MM_DD = DateTimeFormatter.ofPattern("yyyy-MM-dd");
   private static final Logger LOG = LoggerFactory.getLogger(ConversionResource.class);
 
-  private final ConverterRegistry converters;
-  // private final PlaceRegistry places;
   private final PlaceMatcher places;
   private final SearchTermBuilder termBuilder;
+  private final ConversionService conversions;
 
-  public ConversionResource(ConverterRegistry converters, PlaceMatcher places, SearchTermBuilder termBuilder) {
-    this.converters = checkNotNull(converters);
+  public ConversionResource(ConversionService conversions, PlaceMatcher places, SearchTermBuilder termBuilder) {
     this.places = checkNotNull(places);
     this.termBuilder = checkNotNull(termBuilder);
+    this.conversions = conversions;
+  }
+
+  private static Function<String, String> asQuotedString() {
+    return str -> String.format("\"%s\"", str);
   }
 
   @POST
@@ -57,32 +56,29 @@ public class ConversionResource {
 
     final List<Place> candidates = Lists.newArrayList();
 
-    final Map<YearMonthDay, Set<String>> suggestions = places.match(termBuilder.build(dateRequest))
-      .peek(candidates::add)
-      .map(convertForPlace(dateRequest))
-      .flatMap(Function.identity())
-      .collect(Collectors.toMap(ymd -> ymd, YearMonthDay::getNotes, Sets::union));
+    final Map<YearMonthDay, Set<String>> results
+      = places.match(termBuilder.build(dateRequest))
+              .peek(candidates::add)
+              .map(convertForPlace(dateRequest))
+              .flatMap(Function.identity())
+              .collect(Collectors.toMap(ymd -> ymd, YearMonthDay::getNotes, Sets::union));
 
     // collate notes
-    suggestions.keySet().forEach(yearMonthDay -> yearMonthDay.setNotes(suggestions.get(yearMonthDay)));
+    results.keySet().forEach(yearMonthDay -> yearMonthDay.setNotes(results.get(yearMonthDay)));
 
-    LOG.debug("suggestions: {}", suggestions);
+    LOG.debug("results: {}", results);
 
     final DateResult result;
-    if (suggestions.isEmpty()) {
-      int defaultDate = converters.defaultConverter().toJulianDay(asYearMonthDay(dateRequest));
-      result = new DateResult(converters.get(dateRequest.getType()).fromJulianDay(defaultDate));
-      result.addHint("Requested date lies outside all defined calendar ranges, assuming default calendar was in use.");
+    if (results.isEmpty()) {
+      result = new DateResult(defaultConversion(dateRequest));
+      result.addHint("Requested date lies outside all defined calendar periods, assuming default calendar was in use.");
     } else {
-      LOG.debug("suggestions (size {}): {}", suggestions.size(), suggestions);
-      result = new DateResult(Lists.newArrayList(suggestions.keySet()));
+      LOG.debug("results (size {}): {}", results.size(), results);
+      result = new DateResult(Lists.newArrayList(results.keySet()));
     }
 
     if (candidates.size() > 1) {
-      final List<String> candidateNames = candidates.stream()
-                                                    .map(place -> String.format("\"%s\"", place.getName()))
-                                                    .sorted()
-                                                    .collect(Collectors.toList());
+      final String candidateNames = joinPlaces(candidates);
       final String format = "Multiple places matched '%s': %s. Being more specific may increase accuracy.";
       result.addHint(String.format(format, dateRequest.getPlaceTerms(), candidateNames));
     }
@@ -90,62 +86,31 @@ public class ConversionResource {
     return result;
   }
 
+  private String joinPlaces(List<Place> places) {
+    return places.stream()
+                 .map(Place::getName)
+                 .map(asQuotedString())
+                 .sorted()
+                 .collect(Collectors.joining(",", "{", "}"));
+  }
+
   private Function<Place, Stream<YearMonthDay>> convertForPlace(DateRequest dateRequest) {
     return place -> place.getCalendars().stream()
-                         .map(tryDateConversion(dateRequest))
+                         .map(tryConversion(asYearMonthDay(dateRequest), dateRequest.getTargetCalendar()))
                          .filter(Optional::isPresent)
                          .map(Optional::get)
                          .peek(it -> it.addNote(String.format("Based on data for place: '%s'", place.getName())));
   }
 
-  private YearMonthDay asYearMonthDay(String dateAsString) {
-    final LocalDate date = LocalDate.parse(dateAsString, YYYY_MM_DD);
-    return new YearMonthDay(date.getYear(), date.getMonthValue(), date.getDayOfMonth());
+  private Function<CalendarPeriod, Optional<YearMonthDay>> tryConversion(YearMonthDay date, String targetCalendar) {
+    return calendarPeriod -> conversions.convert(calendarPeriod, date, targetCalendar);
+  }
+
+  private YearMonthDay defaultConversion(DateRequest dateRequest) {
+    return conversions.defaultConversion(asYearMonthDay(dateRequest), dateRequest.getTargetCalendar());
   }
 
   private YearMonthDay asYearMonthDay(DateRequest dateRequest) {
     return new YearMonthDay(dateRequest.getYear(), dateRequest.getMonth(), dateRequest.getDay());
-  }
-
-  private Function<CalendarPeriod, Optional<YearMonthDay>> tryDateConversion(DateRequest dateRequest) {
-    return calendarPeriod -> {
-      final CalendarConverter requestConverter = converters.get(calendarPeriod.getCalendar());
-      final int requestDate = requestConverter.toJulianDay(asYearMonthDay(dateRequest));
-
-      // Assuming this calendar is applicable, 'result' is the requestDate converted to the desired calendar
-      final CalendarConverter resultConverter = converters.get(dateRequest.getType());
-      final YearMonthDay result = resultConverter.fromJulianDay(requestDate);
-
-      // Determine if this calendar is applicable for the given date and annotate result as appropriate
-      final String startDateAsString = calendarPeriod.getStartDate();
-      final String endDateAsString = calendarPeriod.getEndDate();
-      if (startDateAsString != null && endDateAsString != null) {
-        final int startDate = requestConverter.toJulianDay(asYearMonthDay(startDateAsString));
-        final int endDate = requestConverter.toJulianDay(asYearMonthDay(endDateAsString));
-        if (requestDate >= startDate && requestDate <= endDate) {
-          result.addNote(String.format("Date within %s calendar start and end bounds",
-            calendarPeriod.getCalendar()));
-          return Optional.of(result);
-        }
-      } else if (startDateAsString != null) {
-        if (requestDate >= requestConverter.toJulianDay(asYearMonthDay(startDateAsString))) {
-          result.addNote(String.format("Date on or after start of %s calendar",
-            calendarPeriod.getCalendar()));
-          return Optional.of(result);
-        }
-      } else if (endDateAsString != null) {
-        if (requestDate <= requestConverter.toJulianDay(asYearMonthDay(endDateAsString))) {
-          result.addNote(String.format("Date on or before end of %s calendar",
-            calendarPeriod.getCalendar()));
-          return Optional.of(result);
-        }
-      } else {
-        result.addNote(String.format("No start or end defined for %s calendar (always in use?)",
-          calendarPeriod.getCalendar()));
-        return Optional.of(result);
-      }
-
-      return Optional.empty();
-    };
   }
 }

@@ -6,13 +6,14 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.huygens.lobsang.api.KnownCalendar;
 import nl.knaw.huygens.lobsang.api.Place;
+import nl.knaw.huygens.lobsang.core.ConversionService;
 import nl.knaw.huygens.lobsang.core.ConverterRegistry;
+import nl.knaw.huygens.lobsang.core.converters.CalendarConverter;
+import nl.knaw.huygens.lobsang.core.places.ContainsAllTermsMatcher;
+import nl.knaw.huygens.lobsang.core.places.OnBreakingWhitespaceSplitter;
 import nl.knaw.huygens.lobsang.core.places.PlaceMatcher;
 import nl.knaw.huygens.lobsang.core.places.PlaceRegistry;
-import nl.knaw.huygens.lobsang.core.places.ContainsAllTermsMatcher;
-import nl.knaw.huygens.lobsang.core.converters.CalendarConverter;
 import nl.knaw.huygens.lobsang.core.places.SearchTermBuilder;
-import nl.knaw.huygens.lobsang.core.places.OnBreakingWhitespaceSplitter;
 import nl.knaw.huygens.lobsang.resources.AboutResource;
 import nl.knaw.huygens.lobsang.resources.ConversionResource;
 import org.glassfish.jersey.logging.LoggingFeature;
@@ -92,7 +93,11 @@ public class LobsangApplication extends Application<LobsangConfiguration> {
 
   private void registerResources(JerseyEnvironment jersey) throws IOException {
     jersey.register(new AboutResource(findManifest(getName())));
-    jersey.register(new ConversionResource(converterRegistry, createPlaceMatcher(), createSearchTermBuilder()));
+    jersey.register(new ConversionResource(createConversionService(), createPlaceMatcher(), createSearchTermBuilder()));
+  }
+
+  private ConversionService createConversionService() {
+    return new ConversionService(converterRegistry);
   }
 
   private SearchTermBuilder createSearchTermBuilder() {

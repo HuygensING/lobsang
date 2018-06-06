@@ -13,7 +13,7 @@ public class DateRequest {
   private int month;
   private int day;
   private String placeTerms;
-  private String type; // convert date to which calendar?
+  private String targetCalendar; // convert date to which calendar?
 
   public DateRequest() {
     // Jackson deserialization
@@ -51,8 +51,8 @@ public class DateRequest {
   }
 
   @JsonProperty
-  public String getType() {
-    return type;
+  public String getTargetCalendar() {
+    return targetCalendar;
   }
 
   @Override
@@ -62,7 +62,7 @@ public class DateRequest {
       .add("month", month)
       .add("day", day)
       .add("placeTerms", placeTerms)
-      .add("type", type)
+      .add("targetCalendar", targetCalendar)
       .toString();
   }
 }
