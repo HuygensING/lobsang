@@ -7,7 +7,9 @@ import io.dropwizard.setup.Environment;
 import nl.knaw.huygens.lobsang.api.KnownCalendar;
 import nl.knaw.huygens.lobsang.api.Place;
 import nl.knaw.huygens.lobsang.core.ConverterRegistry;
-import nl.knaw.huygens.lobsang.core.PlaceRegistry;
+import nl.knaw.huygens.lobsang.core.places.PlaceMatcher;
+import nl.knaw.huygens.lobsang.core.places.PlaceRegistry;
+import nl.knaw.huygens.lobsang.core.places.ContainsAllTermsMatcher;
 import nl.knaw.huygens.lobsang.core.converters.CalendarConverter;
 import nl.knaw.huygens.lobsang.resources.AboutResource;
 import nl.knaw.huygens.lobsang.resources.ConversionResource;
@@ -88,7 +90,11 @@ public class LobsangApplication extends Application<LobsangConfiguration> {
 
   private void registerResources(JerseyEnvironment jersey) throws IOException {
     jersey.register(new AboutResource(findManifest(getName())));
-    jersey.register(new ConversionResource(converterRegistry, placeRegistry));
+    jersey.register(new ConversionResource(converterRegistry, createPlaceMatcher()));
+  }
+
+  private PlaceMatcher createPlaceMatcher() {
+    return new ContainsAllTermsMatcher(placeRegistry);
   }
 
   private Optional<CalendarConverter> instantiateCalendarConverter(String implementationClass) {

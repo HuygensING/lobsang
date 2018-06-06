@@ -7,7 +7,7 @@ import nl.knaw.huygens.lobsang.api.DateResult;
 import nl.knaw.huygens.lobsang.api.Place;
 import nl.knaw.huygens.lobsang.api.YearMonthDay;
 import nl.knaw.huygens.lobsang.core.ConverterRegistry;
-import nl.knaw.huygens.lobsang.core.PlaceRegistry;
+import nl.knaw.huygens.lobsang.core.places.PlaceMatcher;
 import nl.knaw.huygens.lobsang.core.converters.CalendarConverter;
 import org.assertj.core.util.Lists;
 import org.slf4j.Logger;
@@ -22,13 +22,11 @@ import javax.ws.rs.core.MediaType;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,9 +40,10 @@ public class ConversionResource {
   private static final Logger LOG = LoggerFactory.getLogger(ConversionResource.class);
 
   private final ConverterRegistry converters;
-  private final PlaceRegistry places;
+  // private final PlaceRegistry places;
+  private final PlaceMatcher places;
 
-  public ConversionResource(ConverterRegistry converters, PlaceRegistry places) {
+  public ConversionResource(ConverterRegistry converters, PlaceMatcher places) {
     this.converters = checkNotNull(converters);
     this.places = checkNotNull(places);
   }
@@ -58,7 +57,7 @@ public class ConversionResource {
 
     final List<Place> candidates = Lists.newArrayList();
 
-    final Map<YearMonthDay, Set<String>> suggestions = matchingPlaces(searchTerms)
+    final Map<YearMonthDay, Set<String>> suggestions = places.match(searchTerms)
       .peek(candidates::add)
       .map(convertForPlace(dateRequest))
       .flatMap(Function.identity())
@@ -97,19 +96,6 @@ public class ConversionResource {
                          .filter(Optional::isPresent)
                          .map(Optional::get)
                          .peek(it -> it.addNote(String.format("Based on data for place: '%s'", place.getName())));
-  }
-
-  private Stream<Place> matchingPlaces(String[] terms) {
-    return places.stream().filter(isMatchingLocation(terms)).map(places::get);
-  }
-
-  private Predicate<String> isMatchingLocation(String[] terms) {
-    return location -> Arrays.stream(terms)
-                             .allMatch(locationContainsTerm(location));
-  }
-
-  private Predicate<String> locationContainsTerm(String location) {
-    return term -> location.toLowerCase().contains(term);
   }
 
   private YearMonthDay asYearMonthDay(String dateAsString) {
