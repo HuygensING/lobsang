@@ -5,5 +5,5 @@ import nl.knaw.huygens.lobsang.api.Place;
 import java.util.stream.Stream;
 
 public interface PlaceMatcher {
-  Stream<Place> match(String[] searchTerms);
+  Stream<Place> match(Iterable<String> searchTerms);
 }

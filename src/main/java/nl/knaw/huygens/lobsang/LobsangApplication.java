@@ -11,6 +11,8 @@ import nl.knaw.huygens.lobsang.core.places.PlaceMatcher;
 import nl.knaw.huygens.lobsang.core.places.PlaceRegistry;
 import nl.knaw.huygens.lobsang.core.places.ContainsAllTermsMatcher;
 import nl.knaw.huygens.lobsang.core.converters.CalendarConverter;
+import nl.knaw.huygens.lobsang.core.places.SearchTermBuilder;
+import nl.knaw.huygens.lobsang.core.places.OnBreakingWhitespaceSplitter;
 import nl.knaw.huygens.lobsang.resources.AboutResource;
 import nl.knaw.huygens.lobsang.resources.ConversionResource;
 import org.glassfish.jersey.logging.LoggingFeature;
@@ -90,11 +92,15 @@ public class LobsangApplication extends Application<LobsangConfiguration> {
 
   private void registerResources(JerseyEnvironment jersey) throws IOException {
     jersey.register(new AboutResource(findManifest(getName())));
-    jersey.register(new ConversionResource(converterRegistry, createPlaceMatcher()));
+    jersey.register(new ConversionResource(converterRegistry, createPlaceMatcher(), createSearchTermBuilder()));
+  }
+
+  private SearchTermBuilder createSearchTermBuilder() {
+    return new OnBreakingWhitespaceSplitter();
   }
 
   private PlaceMatcher createPlaceMatcher() {
-    return new ContainsAllTermsMatcher(placeRegistry);
+    return new ContainsAllTermsMatcher(placeRegistry, false);
   }
 
   private Optional<CalendarConverter> instantiateCalendarConverter(String implementationClass) {

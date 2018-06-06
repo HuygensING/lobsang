@@ -12,7 +12,7 @@ public class DateRequest {
   private int year;
   private int month;
   private int day;
-  private String location;
+  private String placeTerms;
   private String type; // convert date to which calendar?
 
   public DateRequest() {
@@ -23,11 +23,11 @@ public class DateRequest {
     this(year, month, day, null);
   }
 
-  public DateRequest(int year, int month, int day, String location) {
+  public DateRequest(int year, int month, int day, String placeTerms) {
     this.year = year;
     this.month = month;
     this.day = day;
-    this.location = location;
+    this.placeTerms = placeTerms;
   }
 
   @JsonProperty
@@ -45,9 +45,9 @@ public class DateRequest {
     return day;
   }
 
-  @JsonProperty
-  public String getLocation() {
-    return location;
+  @JsonProperty("location")
+  public String getPlaceTerms() {
+    return placeTerms;
   }
 
   @JsonProperty
@@ -61,7 +61,7 @@ public class DateRequest {
       .add("year", year)
       .add("month", month)
       .add("day", day)
-      .add("location", location)
+      .add("placeTerms", placeTerms)
       .add("type", type)
       .toString();
   }

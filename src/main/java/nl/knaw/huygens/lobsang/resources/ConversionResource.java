@@ -7,8 +7,9 @@ import nl.knaw.huygens.lobsang.api.DateResult;
 import nl.knaw.huygens.lobsang.api.Place;
 import nl.knaw.huygens.lobsang.api.YearMonthDay;
 import nl.knaw.huygens.lobsang.core.ConverterRegistry;
-import nl.knaw.huygens.lobsang.core.places.PlaceMatcher;
 import nl.knaw.huygens.lobsang.core.converters.CalendarConverter;
+import nl.knaw.huygens.lobsang.core.places.PlaceMatcher;
+import nl.knaw.huygens.lobsang.core.places.SearchTermBuilder;
 import org.assertj.core.util.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,22 +43,21 @@ public class ConversionResource {
   private final ConverterRegistry converters;
   // private final PlaceRegistry places;
   private final PlaceMatcher places;
+  private final SearchTermBuilder termBuilder;
 
-  public ConversionResource(ConverterRegistry converters, PlaceMatcher places) {
+  public ConversionResource(ConverterRegistry converters, PlaceMatcher places, SearchTermBuilder termBuilder) {
     this.converters = checkNotNull(converters);
     this.places = checkNotNull(places);
+    this.termBuilder = checkNotNull(termBuilder);
   }
 
   @POST
   public DateResult convert(@NotNull DateRequest dateRequest) {
     LOG.info("dateRequest: {}", dateRequest);
 
-    final String location = dateRequest.getLocation();
-    final String[] searchTerms = location.toLowerCase().split("\\s");
-
     final List<Place> candidates = Lists.newArrayList();
 
-    final Map<YearMonthDay, Set<String>> suggestions = places.match(searchTerms)
+    final Map<YearMonthDay, Set<String>> suggestions = places.match(termBuilder.build(dateRequest))
       .peek(candidates::add)
       .map(convertForPlace(dateRequest))
       .flatMap(Function.identity())
@@ -84,7 +84,7 @@ public class ConversionResource {
                                                     .sorted()
                                                     .collect(Collectors.toList());
       final String format = "Multiple places matched '%s': %s. Being more specific may increase accuracy.";
-      result.addHint(String.format(format, dateRequest.getLocation(), candidateNames));
+      result.addHint(String.format(format, dateRequest.getPlaceTerms(), candidateNames));
     }
 
     return result;
