@@ -32,6 +32,6 @@ knownCalendars:
 
 places:
 - name: somewhere
-  calendars:
+  calendarPeriods:
   - calendar: gregorian
     start: 1584-01-17

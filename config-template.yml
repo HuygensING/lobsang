@@ -28,41 +28,41 @@ knownCalendars:
 
 places:
   - name: Austria, Bohemia
-    calendars:
+    calendarPeriods:
     - calendar: Julian
       end: 1584-01-06
     - calendar: Gregorian
       start: 1584-01-17
   - name: Austria, Brixen, Salzburg and Tyrol
-    calendars:
+    calendarPeriods:
     - calendar: Julian
       end: 1583-10-05
     - calendar: Gregorian
       start: 1583-10-16
   - name: Austria, Carinthia and Styria
-    calendars:
+    calendarPeriods:
     - calendar: Julian
       end: 1583-12-14
     - calendar: Gregorian
       start: 1583-12-25
   - name: Upper Austria, Alsace, Breisgau
-    calendars:
+    calendarPeriods:
     - calendar: Julian
       end: 1583-10-13
     - calendar: Gregorian
       start: 1583-10-24
   - name: Dutch Republic, Gelderland
-    calendars:
+    calendarPeriods:
     - calendar: Gregorian
       start: 1700-07-12
   - name: Dutch Republic, Friesland and Groningen
-    calendars:
+    calendarPeriods:
     - calendar: Julian
       end: 1700-12-31
     - calendar: Gregorian
       start: 1701-01-12
   - name: Groningen (City)
-    calendars:
+    calendarPeriods:
     - calendar: Julian
       end: 1583-02-28
     - calendar: Gregorian
@@ -73,3 +73,14 @@ places:
       end: 1699-12-31
     - calendar: Gregorian
       start: 1700-01-01
+  - name: England and Wales
+    calendarPeriods:
+      - calendar: Julian
+        end: 1752-09-02
+      - calendar: Gregorian
+        start: 1752-09-14
+    startOfYear:
+      - when: --03-25
+        since: 1155
+      - when: --01-01
+        since: 1752
