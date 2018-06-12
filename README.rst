@@ -99,9 +99,9 @@ Examples:
 
   Answer: *30 January, 1649*
 
-  As `this note`_ on `Charles_I`_ eplains, this is sometimes referred to as
+  As `this note`_ on `Charles I`_ eplains, this is sometimes referred to as
   *Old Style Julian calendar*.
 
 __ https://en.wikipedia.org/wiki/Old_Style_and_New_Style_dates#Start_of_the_year_in_the_historical_records_of_Britain_and_its_colonies_and_possessions
 .. _this note: https://en.wikipedia.org/wiki/Charles_I_of_England#cite_note-1 
-.. _Charles_I: https://en.wikipedia.org/wiki/Charles_I_of_England
+.. _Charles I: https://en.wikipedia.org/wiki/Charles_I_of_England
