@@ -51,7 +51,7 @@ Examples:
 
 * `The execution of Charles I`__ was recorded at the time in parliament as
   happening on 30 January 1648. What date would his contemporaries in parts
-  of continental Europe have recorded this execution by? ::
+  of continental Europe have recorded his execution by? ::
 
     curl -s localhost:8080/convert -H 'Content-type: application/json' \
          -d '{"targetCalendar": "gregorian", \
@@ -74,5 +74,34 @@ Examples:
 
   Answer: *9 February 1649*.
 
-.. 
+  If we wanted the date in Julian, but with the year corrected to start on 1
+  January, we ask for ``"targetCalendar": "julian"`` which yields
+  the following result ::
+
+    $ curl -s localhost:8080/convert -H 'Content-type: application/json' \
+           -d '{"targetCalendar": "julian", \
+                "year": "1648", "month": "1", "day": "30", \
+                "place": "england"}' | jq -C . 
+    {
+      "dates": [
+        {
+          "year": 1649,
+          "month": 1,
+          "day": 30,
+          "notes": [
+            "Based on data for place: 'England and Wales'",
+            "Date after 1 January, but in this period, new year started on 03-25, so one year was added.",
+            "Date on or before end of Julian calendar"
+          ]
+        }
+      ]
+    }
+
+  Answer: *30 January, 1649*
+
+  As `this note`_ on `Charles_I`_ eplains, this is sometimes referred to as
+  *Old Style Julian calendar*.
+
 __ https://en.wikipedia.org/wiki/Old_Style_and_New_Style_dates#Start_of_the_year_in_the_historical_records_of_Britain_and_its_colonies_and_possessions
+.. _this note: https://en.wikipedia.org/wiki/Charles_I_of_England#cite_note-1 
+.. _Charles_I: https://en.wikipedia.org/wiki/Charles_I_of_England
