@@ -45,7 +45,7 @@ public class DateRequest {
     return day;
   }
 
-  @JsonProperty("location")
+  @JsonProperty("place")
   public String getPlaceTerms() {
     return placeTerms;
   }
