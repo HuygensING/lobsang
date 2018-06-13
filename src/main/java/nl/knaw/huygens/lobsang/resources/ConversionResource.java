@@ -133,7 +133,7 @@ public class ConversionResource {
                            adjusted.addNote(
                              String.format(
                                "Date after 1 January, but in this period, New Year started on %s, so one year was " +
-                                 "added.",
+                                 "added",
                                startOfYear.getWhen().format(MM_DD)));
                            return adjusted;
                          } else {
