@@ -8,6 +8,7 @@ import nl.knaw.huygens.lobsang.api.Place;
 import nl.knaw.huygens.lobsang.api.StartOfYear;
 import nl.knaw.huygens.lobsang.api.YearMonthDay;
 import nl.knaw.huygens.lobsang.core.ConversionService;
+import nl.knaw.huygens.lobsang.core.adjusters.DateAdjusterBuilder;
 import nl.knaw.huygens.lobsang.core.places.PlaceMatcher;
 import nl.knaw.huygens.lobsang.core.places.SearchTermBuilder;
 import org.slf4j.Logger;
@@ -95,6 +96,10 @@ public class ConversionResource {
     return result;
   }
 
+  private YearMonthDay defaultConversion(DateRequest dateRequest) {
+    return conversions.defaultConversion(asYearMonthDay(dateRequest), dateRequest.getTargetCalendar());
+  }
+
   private String joinPlaces(List<Place> places) {
     return places.stream()
                  .map(Place::getName)
@@ -111,7 +116,7 @@ public class ConversionResource {
                          .filter(Optional::isPresent)
                          .map(Optional::get)
                          .map(resultDate -> addPlaceNameNote(resultDate, place))
-                         .map(resultDate -> adjustForYearStart(resultDate, requestDate, place.getStartOfYearList()));
+                         .map(resultDate -> adjustForNewYearsDay(resultDate, requestDate, place.getStartOfYearList()));
   }
 
   private YearMonthDay addPlaceNameNote(YearMonthDay result, Place place) {
@@ -119,40 +124,28 @@ public class ConversionResource {
     return result;
   }
 
-  private YearMonthDay adjustForYearStart(YearMonthDay result, YearMonthDay subject, List<StartOfYear> startOfYears) {
-    final Year subjectYear = Year.of(subject.getYear());
+  private YearMonthDay adjustForNewYearsDay(YearMonthDay result, YearMonthDay subject, List<StartOfYear> startOfYears) {
+    return findNewYearsDay(startOfYears, Year.of(subject.getYear()))
+      .map(startOfYear -> adjust(startOfYear, asMonthDay(subject), result))
+      .orElseGet(() -> {
+        result.addNote("No place-specific data about when the New Year started, assuming 1 January (no adjustments)");
+        return result;
+      });
+  }
+
+  private Optional<StartOfYear> findNewYearsDay(List<StartOfYear> startOfYears, Year subjectYear) {
     return startOfYears.stream()
                        .filter(startOfYear -> startOfYear.getSince().compareTo(subjectYear) <= 0)
-                       .peek(startOfYear -> LOG.debug("in the race: {}", startOfYear))
-                       .max(comparing(StartOfYear::getSince))
-                       .map(startOfYear -> {
-                         if (!JANUARY_FIRST.equals(startOfYear.getWhen()) && compare(subject, startOfYear) < 0) {
-                           final YearMonthDay adjusted =
-                             new YearMonthDay(result.getYear() + 1, result.getMonth(), result.getDay());
-                           adjusted.setNotes(result.getNotes());
-                           adjusted.addNote(
-                             String.format(
-                               "Date after 1 January, but in this period, New Year started on %s, so one year was " +
-                                 "added",
-                               startOfYear.getWhen().format(MM_DD)));
-                           return adjusted;
-                         } else {
-                           result.addNote("No adjustment necessary based on start of new year.");
-                           return result;
-                         }
-                       })
-                       .orElseGet(() -> {
-                         result.addNote("Insufficient info about when new year started");
-                         return result;
-                       });
+                       .max(comparing(StartOfYear::getSince));
   }
 
-  private int compare(YearMonthDay subject, StartOfYear startOfYear) {
-    return MonthDay.of(subject.getMonth(), subject.getDay()).compareTo(startOfYear.getWhen());
+  private YearMonthDay adjust(StartOfYear startOfYear, MonthDay originalDate, YearMonthDay result) {
+    return DateAdjusterBuilder.withNewYearOn(startOfYear.getWhen()).forOriginalDate(originalDate).build()
+                              .apply(result);
   }
 
-  private YearMonthDay defaultConversion(DateRequest dateRequest) {
-    return conversions.defaultConversion(asYearMonthDay(dateRequest), dateRequest.getTargetCalendar());
+  private MonthDay asMonthDay(YearMonthDay result) {
+    return MonthDay.of(result.getMonth(), result.getDay());
   }
 
   private YearMonthDay asYearMonthDay(DateRequest dateRequest) {
