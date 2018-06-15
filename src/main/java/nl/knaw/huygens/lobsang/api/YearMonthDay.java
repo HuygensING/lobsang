@@ -54,7 +54,13 @@ public class YearMonthDay {
   }
 
   public void setNotes(Set<String> notes) {
-    this.notes = notes;
+    this.notes = new HashSet<>(notes);
+  }
+
+  public YearMonthDay inNextYear() {
+    YearMonthDay nextYear = new YearMonthDay(year + 1, month, day);
+    nextYear.setNotes(notes);
+    return nextYear;
   }
 
   @Override

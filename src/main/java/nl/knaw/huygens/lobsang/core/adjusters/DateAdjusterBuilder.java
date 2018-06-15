@@ -32,16 +32,15 @@ public class DateAdjusterBuilder {
       return UnaryOperator.identity();
     }
 
-    return dateToBeAdjusted -> {
-      final YearMonthDay adjusted = adjustForLaterStartOfYear(dateToBeAdjusted);
-      adjusted.setNotes(dateToBeAdjusted.getNotes());
-      adjusted.addNote(explain(startOfYear, dateToBeAdjusted.getYear()));
-      return adjusted;
-    };
+    return advanceToNextYear();
   }
 
-  private YearMonthDay adjustForLaterStartOfYear(YearMonthDay dateToBeAdjusted) {
-    return new YearMonthDay(dateToBeAdjusted.getYear() + 1, dateToBeAdjusted.getMonth(), dateToBeAdjusted.getDay());
+  private UnaryOperator<YearMonthDay> advanceToNextYear() {
+    return date -> {
+      final YearMonthDay oneYearLater = date.inNextYear();
+      oneYearLater.addNote(explain(startOfYear, date.getYear()));
+      return oneYearLater;
+    };
   }
 
   private String explain(MonthDay startOfYear, int year) {
