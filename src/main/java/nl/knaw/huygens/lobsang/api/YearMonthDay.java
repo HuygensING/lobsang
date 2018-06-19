@@ -58,7 +58,7 @@ public class YearMonthDay {
   }
 
   public YearMonthDay inNextYear() {
-    YearMonthDay nextYear = new YearMonthDay(year + 1, month, day);
+    final YearMonthDay nextYear = new YearMonthDay(year + 1, month, day);
     nextYear.setNotes(notes);
     return nextYear;
   }
