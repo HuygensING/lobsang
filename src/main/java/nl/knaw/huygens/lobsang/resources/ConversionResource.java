@@ -11,19 +11,28 @@ import nl.knaw.huygens.lobsang.core.ConversionService;
 import nl.knaw.huygens.lobsang.core.adjusters.DateAdjusterBuilder;
 import nl.knaw.huygens.lobsang.core.places.PlaceMatcher;
 import nl.knaw.huygens.lobsang.core.places.SearchTermBuilder;
+import nl.knaw.huygens.lobsang.core.readers.CsvReader;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.glassfish.jersey.message.internal.MediaTypes;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.time.MonthDay;
 import java.time.Year;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,16 +44,13 @@ import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Comparator.comparing;
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
+import static org.slf4j.LoggerFactory.getLogger;
 
 @Path("convert")
-@Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ConversionResource {
-  private static final MonthDay JANUARY_FIRST = MonthDay.of(1, 1);
-
-  private static final DateTimeFormatter MM_DD = DateTimeFormatter.ofPattern("MM-dd");
-
-  private static final Logger LOG = LoggerFactory.getLogger(ConversionResource.class);
+  private static final Logger LOG = getLogger(ConversionResource.class);
 
   private final PlaceMatcher places;
   private final SearchTermBuilder termBuilder;
@@ -61,6 +67,7 @@ public class ConversionResource {
   }
 
   @POST
+  @Consumes(MediaType.APPLICATION_JSON)
   public DateResult convert(@NotNull DateRequest dateRequest) {
     LOG.info("dateRequest: {}", dateRequest);
 
@@ -98,6 +105,63 @@ public class ConversionResource {
 
   private YearMonthDay defaultConversion(DateRequest dateRequest) {
     return conversions.defaultConversion(asYearMonthDay(dateRequest), dateRequest.getTargetCalendar());
+  }
+
+  @POST
+  @Path("table")
+  @Consumes(MediaType.MULTIPART_FORM_DATA)
+  public Response convertTable(@FormDataParam("file") final InputStream inputStream,
+                               @FormDataParam("file") final FormDataBodyPart body,
+                               @FormDataParam("file") final FormDataContentDisposition fileInfo,
+                               FormDataMultiPart formData) {
+    LOG.debug("inputStream: {}, body: {}, fileInfo: {}", inputStream, body, fileInfo);
+
+    if (inputStream == null || body == null || fileInfo == null) {
+      throw new BadRequestException("Missing form param 'file=@<some_file>'");
+    }
+
+    LOG.debug("mediaType: {}", body.getMediaType());
+    LOG.debug("fileName: {}", fileInfo.getFileName());
+    LOG.debug("formData: {}", formData.getFields().keySet());
+    final Map<String, String> options = extractOptions(formData);
+    LOG.debug("options: {}", options);
+
+    try {
+      final CsvReader reader = new CsvReader.Builder(options).build();
+      // TODO: partial duplicate, clean up
+      reader.read(inputStream, dateRequest -> {
+        LOG.debug("dateRequest: {}", dateRequest);
+        final List<YearMonthDay> results = places.match(termBuilder.build(dateRequest))
+                                                 .map(convertForPlace(dateRequest))
+                                                 .flatMap(Function.identity())
+                                                 .collect(Collectors.toList());
+        LOG.debug("results: {}", results);
+      });
+    } catch (IllegalArgumentException e) {
+      throw new BadRequestException(e.getMessage());
+    }
+
+    return Response.ok(options).build();
+  }
+
+  private Map<String, String> extractOptions(FormDataMultiPart formData) {
+    return formData.getFields().entrySet().stream()
+                   .filter(entry -> entry.getValue().size() > 0)
+                   .filter(entry -> entry.getValue().get(0) != null)
+                   .filter(entry -> MediaTypes.typeEqual(TEXT_PLAIN_TYPE, entry.getValue().get(0).getMediaType()))
+                   .collect(Collectors.toMap(Map.Entry::getKey, entry -> decode(entry.getValue().get(0).getValue())));
+  }
+
+  private String decode(String value) {
+    // so we can support "-F 'delimiter=%3B'" because ';' (semicolon) terminates Content-Disposition elements
+    // and unfortunately some people want to use semicolons as separators in their CSV
+    try {
+      return URLDecoder.decode(value, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      LOG.warn("Unsupported encoding: {}", e.getMessage());
+      e.printStackTrace();
+      return value;
+    }
   }
 
   private String joinPlaces(List<Place> places) {

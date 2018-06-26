@@ -20,14 +20,15 @@ public class DateRequest {
   }
 
   public DateRequest(int year, int month, int day) {
-    this(year, month, day, null);
+    this(year, month, day, null, null);
   }
 
-  public DateRequest(int year, int month, int day, String placeTerms) {
+  public DateRequest(int year, int month, int day, String placeTerms, String targetCalendar) {
     this.year = year;
     this.month = month;
     this.day = day;
     this.placeTerms = placeTerms;
+    this.targetCalendar = targetCalendar;
   }
 
   @JsonProperty

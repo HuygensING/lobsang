@@ -1,6 +1,7 @@
 package nl.knaw.huygens.lobsang;
 
 import io.dropwizard.Application;
+import io.dropwizard.forms.MultiPartBundle;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -66,6 +67,7 @@ public class LobsangApplication extends Application<LobsangConfiguration> {
   @Override
   public void initialize(Bootstrap<LobsangConfiguration> bootstrap) {
     LOG.info("initializing");
+    bootstrap.addBundle(new MultiPartBundle());
   }
 
   public void run(LobsangConfiguration lobsangConfiguration, Environment environment) throws IOException {

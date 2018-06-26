@@ -64,8 +64,17 @@ compileJava {
 
 dependencies {
     implementation group: 'io.dropwizard', name: 'dropwizard-core', version: dropwizardVersion
+    implementation group: 'io.dropwizard', name: 'dropwizard-forms', version: dropwizardVersion
     implementation group: 'io.dropwizard', name: 'dropwizard-json-logging', version: dropwizardVersion
     implementation group: 'io.dropwizard', name: 'dropwizard-testing', version: dropwizardVersion
+
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: '2.8.8'
+
+    // CSV uploads handling
+    implementation group: 'org.apache.commons', name: 'commons-csv', version: '1.5'
+
+    // Excel
+//    implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '3.14'
 
 //    testCompile group: "org.mockito", name: "mockito-core", version: mockitoVersion
     testImplementation group: "org.junit.jupiter", name: "junit-jupiter-api", version: junitVersion
