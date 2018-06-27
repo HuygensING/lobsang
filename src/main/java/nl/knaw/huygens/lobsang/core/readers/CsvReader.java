@@ -1,6 +1,5 @@
 package nl.knaw.huygens.lobsang.core.readers;
 
-import nl.knaw.huygens.lobsang.api.DateRequest;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -10,9 +9,10 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -22,21 +22,31 @@ public class CsvReader {
 
   private final CSVFormat format;
 
+  private CSVParser parser;
+
   private CsvReader(CSVFormat format) {
     this.format = format;
     LOG.debug("format: {}", format);
   }
 
-  public void read(InputStream stream, Consumer<DateRequest> consumer) {
-    final CSVParser parser;
-    try {
-      parser = format.parse(new InputStreamReader(stream));
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-    parser.iterator().forEachRemaining(record -> consumer.accept(new DateRequestBuilder(record).build()));
+  public void parse(InputStream inputStream) throws IOException {
+    parser = format.parse(new InputStreamReader(inputStream));
   }
 
+  public List<String> getColumnNames() {
+    return new ArrayList<>(parser.getHeaderMap().keySet());
+  }
+
+  public void read(RecordHandler consumer) throws IOException {
+    for (CSVRecord record : parser) {
+      consumer.handle(record);
+    }
+  }
+
+  @FunctionalInterface
+  public interface RecordHandler {
+    void handle(CSVRecord record) throws IOException;
+  }
 
   public static class Builder {
     private final Map<String, String> config;
@@ -93,23 +103,5 @@ public class CsvReader {
 
       return value.charAt(0);
     }
-  }
-
-  private class DateRequestBuilder {
-    private final CSVRecord record;
-
-    public DateRequestBuilder(CSVRecord record) {
-      this.record = record;
-    }
-
-    DateRequest build() {
-      return new DateRequest(
-        Integer.valueOf(record.get("Y")),
-        Integer.valueOf(record.get("M")),
-        Integer.valueOf(record.get("D")),
-        record.get("Place"),
-        "gregorian");
-    }
-
   }
 }

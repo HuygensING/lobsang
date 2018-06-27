@@ -12,6 +12,9 @@ import nl.knaw.huygens.lobsang.core.adjusters.DateAdjusterBuilder;
 import nl.knaw.huygens.lobsang.core.places.PlaceMatcher;
 import nl.knaw.huygens.lobsang.core.places.SearchTermBuilder;
 import nl.knaw.huygens.lobsang.core.readers.CsvReader;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -19,6 +22,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.slf4j.Logger;
 
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
@@ -27,8 +31,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.time.MonthDay;
@@ -50,8 +57,9 @@ import static org.slf4j.LoggerFactory.getLogger;
 @Path("convert")
 @Produces(MediaType.APPLICATION_JSON)
 public class ConversionResource {
+  public static final int MAX_CONVERSION_LIMIT = 10;
+  private static final int DEFAULT_MAX_CONVERSIONS = 3;
   private static final Logger LOG = getLogger(ConversionResource.class);
-
   private final PlaceMatcher places;
   private final SearchTermBuilder termBuilder;
   private final ConversionService conversions;
@@ -110,6 +118,7 @@ public class ConversionResource {
   @POST
   @Path("table")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
+  @Produces("text/csv")
   public Response convertTable(@FormDataParam("file") final InputStream inputStream,
                                @FormDataParam("file") final FormDataBodyPart body,
                                @FormDataParam("file") final FormDataContentDisposition fileInfo,
@@ -126,22 +135,83 @@ public class ConversionResource {
     final Map<String, String> options = extractOptions(formData);
     LOG.debug("options: {}", options);
 
-    try {
-      final CsvReader reader = new CsvReader.Builder(options).build();
-      // TODO: partial duplicate, clean up
-      reader.read(inputStream, dateRequest -> {
-        LOG.debug("dateRequest: {}", dateRequest);
-        final List<YearMonthDay> results = places.match(termBuilder.build(dateRequest))
-                                                 .map(convertForPlace(dateRequest))
-                                                 .flatMap(Function.identity())
-                                                 .collect(Collectors.toList());
-        LOG.debug("results: {}", results);
-      });
-    } catch (IllegalArgumentException e) {
-      throw new BadRequestException(e.getMessage());
+    final CsvReader reader = new CsvReader.Builder(options).build();
+
+    // TODO: pass targetCalendar based on request parameters
+    final DateRequestBuilder dateRequestBuilder = new DateRequestBuilder();
+
+    final int maxConversions = clampMaxConversions(options.get("maxConversions"));
+
+    return Response.ok()
+                   .type("text/csv")
+                   .entity((StreamingOutput) output -> {
+                     final CSVPrinter printer = new CSVPrinter(new PrintWriter(output), CSVFormat.EXCEL);
+                     reader.parse(inputStream);
+                     for (String column : reader.getColumnNames()) {
+                       printer.print(column);
+                     }
+                     for (int i = 0; i < maxConversions; i++) {
+                       printer.print(String.format("Y_%d", i));
+                       printer.print(String.format("M_%d", i));
+                       printer.print(String.format("D_%d", i));
+                     }
+                     printer.println();
+                     reader.read(record -> copyAndConvert(reader, dateRequestBuilder, maxConversions, record, printer));
+                     printer.flush();
+                     printer.close();
+                   })
+                   .build();
+  }
+
+  private int clampMaxConversions(@Nullable String maxConversionsParam) {
+    int maxConversions = Optional.ofNullable(maxConversionsParam).map(Integer::valueOf).orElse(DEFAULT_MAX_CONVERSIONS);
+
+    if (maxConversions < 1 || MAX_CONVERSION_LIMIT < maxConversions) {
+      String msg = String.format("parameter 'maxConversions' must be 1 <= maxConversions <= %d, but got: %d",
+        MAX_CONVERSION_LIMIT, maxConversions);
+      LOG.warn(msg);
+      throw new BadRequestException(msg);
     }
 
-    return Response.ok(options).build();
+    return maxConversions;
+  }
+
+  private void copyAndConvert(CsvReader reader, DateRequestBuilder dateRequestBuilder, int maxConversions,
+                              CSVRecord record, CSVPrinter printer) throws IOException {
+    final DateRequest dateRequest = dateRequestBuilder.build(record);
+
+    final int columnCount = reader.getColumnNames().size();
+    for (int i = 0; i < columnCount; i++) {
+      printer.print(record.get(i));
+    }
+
+    // TODO: partial duplicate, clean up
+    final List<YearMonthDay> conversions = places.match(termBuilder.build(dateRequest))
+                                                 .map(convertForPlace(dateRequest))
+                                                 .flatMap(Function.identity())
+                                                 .limit(maxConversions)
+                                                 .collect(Collectors.toList());
+
+    if (conversions.isEmpty()) {
+      conversions.add(defaultConversion(dateRequest));
+    }
+
+    for (YearMonthDay ymd : conversions) {
+      printer.print(ymd.getYear());
+      printer.print(ymd.getMonth());
+      printer.print(ymd.getDay());
+    }
+
+    int shortBy = maxConversions - conversions.size();
+    for (int i = 0; i < shortBy; i++) {
+      // print empty fields for Y,M,D
+      for (int j = 0; j < 3; j++) {
+        printer.print("");
+      }
+    }
+
+    // end record
+    printer.println();
   }
 
   private Map<String, String> extractOptions(FormDataMultiPart formData) {
@@ -214,5 +284,27 @@ public class ConversionResource {
 
   private YearMonthDay asYearMonthDay(DateRequest dateRequest) {
     return new YearMonthDay(dateRequest.getYear(), dateRequest.getMonth(), dateRequest.getDay());
+  }
+
+  private class DateRequestBuilder {
+    private final String targetCalendar;
+
+    private DateRequestBuilder() {
+      this("gregorian");
+    }
+
+    private DateRequestBuilder(String targetCalendar) {
+      this.targetCalendar = targetCalendar;
+    }
+
+    DateRequest build(CSVRecord record) {
+      return new DateRequest(
+        Integer.valueOf(record.get("Y")),
+        Integer.valueOf(record.get("M")),
+        Integer.valueOf(record.get("D")),
+        record.get("Place"),
+        targetCalendar);
+    }
+
   }
 }
